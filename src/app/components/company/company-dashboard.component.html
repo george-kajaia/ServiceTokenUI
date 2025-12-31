@@ -1,0 +1,84 @@
+<div class="dashboard-container" *ngIf="company">
+  <h2>Company Dashboard</h2>
+
+  <section class="company-info">
+    <h3>Company Info</h3>
+    <p><strong>Id:</strong> {{ company.id }}</p>
+    <p><strong>Name:</strong> {{ company.name }}</p>
+    <p><strong>Tax Code:</strong> {{ company.taxCode }}</p>
+    <p><strong>Status:</strong> {{ company.status === 1 ? 'Active' : 'Not Active' }}</p>
+    <p><strong>Reg Date:</strong> {{ company.regDate | date }}</p>
+  </section>
+
+  <section class="bond-requests">
+    <h3>Bond Requests</h3>
+
+    <table *ngIf="BondRequests.length > 0" class="grid">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>RegDate</th>
+          <th>Status</th>
+          <th>TotalCount</th>
+          <th>Price</th>
+          <th>Term</th>
+          <th>ApproveDate</th>
+          <th>InterestRate</th>
+          <th>RealizationPeriodNumber</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tr of BondRequests">
+          <td>{{ tr.id }}</td>
+          <td>{{ tr.regDate | date }}</td>
+          <td>{{ tr.status }}</td>
+          <td>{{ tr.totalCount }}</td>
+          <td>{{ tr.price }}</td>
+          <td>{{ tr.term }}</td>
+          <td>{{ tr.approveDate | date }}</td>
+          <td>{{ tr.interestRate }}</td>
+          <td>{{ tr.realizationPeriodNumber }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="!BondRequests.length">No bond requests yet.</p>
+  </section>
+
+  <section class="new-request">
+    <h3>Create New bond Request</h3>
+
+    <form (ngSubmit)="onCreateRequest()">
+      <div class="grid-form">
+        <label>
+          Total Count
+          <input type="number" [(ngModel)]="newRequest.totalCount" name="totalCount" required />
+        </label>
+        <label>
+          Price
+          <input type="number" step="0.01" [(ngModel)]="newRequest.price" name="price" required />
+        </label>
+        <label>
+          Term (months)
+          <input type="number" [(ngModel)]="newRequest.term" name="term" required />
+        </label>
+        <label>
+          Interest Rate
+          <input type="number" step="0.01" [(ngModel)]="newRequest.interestRate" name="interestRate" required />
+        </label>
+        <label>
+          Realization Period Number
+          <input type="number" step="1" [(ngModel)]="newRequest.realizationPeriodNumber" name="RealizationPeriodNumber" required />
+        </label>
+      </div>
+
+      <button type="submit" [disabled]="!isActive() || loading">Request bonds</button>
+      <p *ngIf="!isActive()" class="info">Company must be Active (Status=1) to request bonds.</p>
+    </form>
+  </section>
+
+  <div *ngIf="info" class="info">{{ info }}</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <a routerLink="/" class="back-link">Back to main page</a>
+</div>

@@ -1,0 +1,198 @@
+<div class="marketplace-container">
+  <h2>Investor Marketplace</h2>
+
+  <div class="investor-info" *ngIf="investorName">
+    Logged in as: <span class="investor-name">{{ investorName }}</span>
+  </div>
+
+
+  <div class="tabs">
+    <button
+      class="tab"
+      [class.active]="activeTab === 'yourBonds'"
+      (click)="setTab('yourBonds')">
+      Your Bonds
+    </button>
+
+    <button
+      class="tab"
+      [class.active]="activeTab === 'companiesBonds'"
+      (click)="setTab('companiesBonds')">
+      Companies Bonds
+    </button>
+
+    <button
+      class="tab"
+      [class.active]="activeTab === 'secondaryMarket'"
+      (click)="setTab('secondaryMarket')">
+      Secondary Market
+    </button>
+  </div>
+
+  <!-- Tab 1: Your Bonds -->
+  <section *ngIf="activeTab === 'yourBonds'" class="tab-content">
+    <div *ngIf="yourBondsLoading" class="info">Loading your bonds...</div>
+    <div *ngIf="yourBondsError" class="error">{{ yourBondsError }}</div>
+    <div *ngIf="yourBondsInfo" class="info">{{ yourBondsInfo }}</div>
+
+    <table class="grid" *ngIf="!yourBondsLoading && yourBonds.length > 0">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Bond Id</th>
+          <th>Price</th>
+          <th>Interest %</th>
+          <th>Status</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Owner</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let b of yourBonds">
+          <td>{{ b.companyName }}</td>
+          <td>{{ b.id }}</td>
+          <td>{{ b.price }}</td>
+          <td>{{ b.interestRate }}</td>
+          <td>{{ b.status }}</td>
+          <td>{{ b.startDate | date: 'yyyy-MM-dd' }}</td>
+          <td>{{ b.endDate   | date: 'yyyy-MM-dd' }}</td>
+          <td class="mono">{{ b.ownerPublicKey }}</td>
+          <td>
+            <button
+              class="action-btn secondary"
+              (click)="markForResell(b)"
+              [disabled]="b.status !== 1 || markingResellId === b.id">
+              {{ markingResellId === b.id ? 'Marking...' : 'Mark for Resell' }}
+            </button>
+            <button
+              class="action-btn danger"
+              (click)="cancelReselling(b)"
+              [disabled]="b.status !== 0 || cancelingResellId === b.id">
+              {{ cancelingResellId === b.id ? 'Cancelling...' : 'Cancel Reselling' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Tab 2: Companies Bonds (Primary Market) -->
+  <section *ngIf="activeTab === 'companiesBonds'" class="tab-content">
+    <div class="selector">
+      <label>
+        Company:
+        <select [(ngModel)]="selectedCompanyId" (change)="onCompanyChange()">
+          <option [ngValue]="null">-- select company --</option>
+          <option *ngFor="let c of companies" [ngValue]="c.id">
+            {{ c.name }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    <div *ngIf="companiesLoading" class="info">Loading companies...</div>
+    <div *ngIf="companiesError" class="error">{{ companiesError }}</div>
+
+    <div *ngIf="primaryBondsLoading" class="info">Loading company bonds...</div>
+    <div *ngIf="primaryBondsError" class="error">{{ primaryBondsError }}</div>
+
+    <table class="grid" *ngIf="!primaryBondsLoading && primaryBonds.length > 0">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Bond Id</th>
+          <th>Price</th>
+          <th>Interest %</th>
+          <th>Status</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let b of primaryBonds">
+          <td>{{ b.companyName }}</td>
+          <td>{{ b.id }}</td>
+          <td>{{ b.price }}</td>
+          <td>{{ b.interestRate }}</td>
+          <td>{{ b.status }}</td>
+          <td>{{ b.startDate | date: 'yyyy-MM-dd' }}</td>
+          <td>{{ b.endDate   | date: 'yyyy-MM-dd' }}</td>
+          <td>
+            <button
+              class="action-btn primary"
+              (click)="buyPrimary(b)"
+              [disabled]="buyingPrimaryId === b.id">
+              {{ buyingPrimaryId === b.id ? 'Buying...' : 'Buy' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div
+      *ngIf="
+        selectedCompanyId &&
+        !primaryBondsLoading &&
+        primaryBonds.length === 0 &&
+        !primaryBondsError
+      "
+      class="info">
+      This company has no bonds on the primary market.
+    </div>
+  </section>
+
+  <!-- Tab 3: Secondary Market -->
+  <section *ngIf="activeTab === 'secondaryMarket'" class="tab-content">
+    <div *ngIf="secondaryBondsLoading" class="info">Loading secondary market bonds...</div>
+    <div *ngIf="secondaryBondsError" class="error">{{ secondaryBondsError }}</div>
+
+    <table class="grid" *ngIf="!secondaryBondsLoading && secondaryBonds.length > 0">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Bond Id</th>
+          <th>Price</th>
+          <th>Interest %</th>
+          <th>Status</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Current Owner</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let b of secondaryBonds">
+          <td>{{ b.companyName }}</td>
+          <td>{{ b.id }}</td>
+          <td>{{ b.price }}</td>
+          <td>{{ b.interestRate }}</td>
+          <td>{{ b.status }}</td>
+          <td>{{ b.startDate | date: 'yyyy-MM-dd' }}</td>
+          <td>{{ b.endDate   | date: 'yyyy-MM-dd' }}</td>
+          <td class="mono">{{ b.ownerPublicKey }}</td>
+          <td>
+            <button
+              class="action-btn primary"
+              (click)="buySecondary(b)"
+              [disabled]="buyingSecondaryId === b.id">
+              {{ buyingSecondaryId === b.id ? 'Buying...' : 'Buy' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div
+      *ngIf="
+        !secondaryBondsLoading &&
+        secondaryBonds.length === 0 &&
+        !secondaryBondsError
+      "
+      class="info">
+      There are no bonds available on the secondary market right now.
+    </div>
+  </section>
+</div>

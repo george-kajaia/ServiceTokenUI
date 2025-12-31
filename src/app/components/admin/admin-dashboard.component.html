@@ -1,0 +1,136 @@
+<div class="admin-container">
+  <h2>Admin Dashboard</h2>
+
+  <div class="tabs">
+    <button
+      [class.active]="activeTab === 'companies'"
+      (click)="setTab('companies')"
+    >
+      Companies
+    </button>
+    <button
+      [class.active]="activeTab === 'BondRequests'"
+      (click)="setTab('BondRequests')"
+    >
+      Bond Requests
+    </button>
+  </div>
+
+  <!-- Companies Tab -->
+  <section *ngIf="activeTab === 'companies'" class="tab-content">
+    <h3>Companies</h3>
+
+    <div class="filters">
+      <label>
+        Name
+        <input type="text" [(ngModel)]="companyFilter.name" (ngModelChange)="applyCompanyFilter()" />
+      </label>
+      <label>
+        Tax Code
+        <input type="text" [(ngModel)]="companyFilter.taxCode" (ngModelChange)="applyCompanyFilter()" />
+      </label>
+      <label>
+        Status
+        <select [(ngModel)]="companyFilter.status" (ngModelChange)="applyCompanyFilter()">
+          <option value="">All</option>
+          <option value="0">Not Active</option>
+          <option value="1">Active</option>
+        </select>
+      </label>
+      <button (click)="clearCompanyFilter()">Clear</button>
+    </div>
+
+    <table *ngIf="filteredCompanies.length > 0" class="grid">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Name</th>
+          <th>Tax Code</th>
+          <th>Status</th>
+          <th>RegDate</th>
+          <th>Approve</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filteredCompanies">
+          <td>{{ c.id }}</td>
+          <td>{{ c.name }}</td>
+          <td>{{ c.taxCode }}</td>
+          <td>{{ c.status === 1 ? 'Active' : 'Not Active' }}</td>
+          <td>{{ c.regDate | date }}</td>
+          <td>
+            <button (click)="approveCompany(c)" [disabled]="c.status === 1">
+              Activate
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="!filteredCompanies.length">No companies found.</p>
+  </section>
+
+  <!-- Bond Requests Tab -->
+  <section *ngIf="activeTab === 'BondRequests'" class="tab-content">
+    <h3>Bond Requests</h3>
+
+    <div class="filters">
+      <label>
+        Company Id
+        <input type="text" [(ngModel)]="bondFilter.companyId" />
+      </label>
+      <label>
+        Status
+        <select [(ngModel)]="bondFilter.status" (ngModelChange)="applyBondFilter()">
+          <option value="">All</option>
+          <option value="1">Not Active</option>
+          <option value="2">Active</option>
+        </select>
+      </label>
+      <button (click)="loadBondRequests()">Load</button>
+      <button (click)="clearBondFilter()">Clear Status Filter</button>
+    </div>
+
+    <table *ngIf="filteredBondRequests.length > 0" class="grid">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>CompanyId</th>
+          <th>RegDate</th>
+          <th>Status</th>
+          <th>TotalCount</th>
+          <th>Price</th>
+          <th>Term</th>
+          <th>InterestRate</th>
+          <th>RealizationPeriodNumber</th>
+          <th>Approve</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tr of filteredBondRequests">
+          <td>{{ tr.id }}</td>
+          <td>{{ tr.companyId }}</td>
+          <td>{{ tr.regDate | date }}</td>
+          <td>{{ tr.type }}</td>
+          <td>{{ tr.status }}</td>
+          <td>{{ tr.totalCount }}</td>
+          <td>{{ tr.price }}</td>
+          <td>{{ tr.term }}</td>
+          <td>{{ tr.interestRate }}</td>
+          <td>{{ tr.realizationPeriodNumber }}</td>
+          <td>
+            <button (click)="approveBondRequest(tr)" [disabled]="tr.status === 2">
+              Activate
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="!filteredBondRequests.length">No bond requests loaded.</p>
+  </section>
+
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <a routerLink="/" class="back-link">Back to main page</a>
+</div>

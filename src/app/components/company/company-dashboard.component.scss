@@ -1,0 +1,73 @@
+.dashboard-container {
+  max-width: 1000px;
+  margin: 24px auto;
+  padding: 16px;
+}
+
+.company-info, .bond-requests, .new-request {
+  margin-top: 16px;
+  padding: 12px;
+  background: #111827;
+  border-radius: 10px;
+}
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.grid th, .grid td {
+  border: 1px solid #374151;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.grid th {
+  background: #020617;
+}
+
+.grid-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+input {
+  margin-top: 4px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #f9fafb;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #10b981;
+  color: white;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.6;
+}
+
+.info {
+  margin-top: 8px;
+  color: #facc15;
+}
+
+.error {
+  margin-top: 8px;
+  color: #fca5a5;
+}
