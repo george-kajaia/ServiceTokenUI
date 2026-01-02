@@ -2,83 +2,243 @@
   <h2>Company Dashboard</h2>
 
   <section class="company-info">
-    <h3>Company Info</h3>
-    <p><strong>Id:</strong> {{ company.id }}</p>
-    <p><strong>Name:</strong> {{ company.name }}</p>
-    <p><strong>Tax Code:</strong> {{ company.taxCode }}</p>
-    <p><strong>Status:</strong> {{ company.status === 1 ? 'Active' : 'Not Active' }}</p>
-    <p><strong>Reg Date:</strong> {{ company.regDate | date }}</p>
+    <div class="company-info-grid">
+      <div><span class="label">Id</span><span class="value">{{ company.id }}</span></div>
+      <div><span class="label">Name</span><span class="value">{{ company.name }}</span></div>
+      <div><span class="label">Tax Code</span><span class="value">{{ company.taxCode }}</span></div>
+      <div>
+        <span class="label">Status</span>
+        <span class="value" [class.badge-active]="company.status === 1" [class.badge-inactive]="company.status !== 1">
+          {{ company.status === 1 ? 'Active' : 'Not Active' }}
+        </span>
+      </div>
+      <div><span class="label">Reg Date</span><span class="value">{{ company.regDate | date }}</span></div>
+    </div>
   </section>
 
-  <section class="bond-requests">
-    <h3>Bond Requests</h3>
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab === 'requests'" (click)="setTab('requests')">
+      Requests
+    </button>
+    <button class="tab" [class.active]="activeTab === 'products'" (click)="setTab('products')">
+      Products
+    </button>
+  </div>
 
-    <table *ngIf="BondRequests.length > 0" class="grid">
+  <!-- Requests Tab -->
+  <section *ngIf="activeTab === 'requests'" class="panel">
+    <div class="panel-header">
+      <h3>Requests</h3>
+
+      <div class="actions">
+        <button (click)="onRequestView()" [disabled]="!selectedRequest">View</button>
+        <button (click)="onRequestAdd()">Add</button>
+        <button (click)="onRequestEdit()" [disabled]="!selectedRequest">Edit</button>
+        <button (click)="onRequestDelete()" [disabled]="!selectedRequest">Delete</button>
+        <button class="secondary" (click)="loadRequests()" [disabled]="requestsLoading">Refresh</button>
+      </div>
+    </div>
+
+    <div *ngIf="requestsLoading" class="info">Loading requests...</div>
+    <div *ngIf="requestsError" class="error">{{ requestsError }}</div>
+
+    <table *ngIf="!requestsLoading && requests.length > 0" class="grid">
       <thead>
         <tr>
           <th>Id</th>
-          <th>RegDate</th>
+          <th>Prod Id</th>
+          <th>Reg Date</th>
           <th>Status</th>
-          <th>TotalCount</th>
-          <th>Price</th>
-          <th>Term</th>
-          <th>ApproveDate</th>
-          <th>InterestRate</th>
-          <th>RealizationPeriodNumber</th>
+          <th>Authorize Date</th>
+          <th>Approve Date</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let tr of BondRequests">
-          <td>{{ tr.id }}</td>
-          <td>{{ tr.regDate | date }}</td>
-          <td>{{ tr.status }}</td>
-          <td>{{ tr.totalCount }}</td>
-          <td>{{ tr.price }}</td>
-          <td>{{ tr.term }}</td>
-          <td>{{ tr.approveDate | date }}</td>
-          <td>{{ tr.interestRate }}</td>
-          <td>{{ tr.realizationPeriodNumber }}</td>
+        <tr
+          *ngFor="let r of requests"
+          (click)="selectRequest(r)"
+          [class.selected]="selectedRequest?.id === r.id">
+          <td>{{ r.id }}</td>
+          <td>{{ r.prodId }}</td>
+          <td>{{ r.regDate | date: 'medium' }}</td>
+          <td>{{ requestStatusLabel(r.status) }}</td>
+          <td>{{ r.authorizeDate ? (r.authorizeDate | date: 'medium') : '-' }}</td>
+          <td>{{ r.approveDate ? (r.approveDate | date: 'medium') : '-' }}</td>
         </tr>
       </tbody>
     </table>
 
-    <p *ngIf="!BondRequests.length">No bond requests yet.</p>
+    <div *ngIf="!requestsLoading && requests.length === 0" class="muted">
+      No requests found for this company.
+    </div>
+
+    <div class="hint">
+      Note: per the provided backend signatures, the Requests tab uses Product.Update/Delete with the selected request’s ProdId.
+    </div>
   </section>
 
-  <section class="new-request">
-    <h3>Create New bond Request</h3>
+  <!-- Products Tab -->
+  <section *ngIf="activeTab === 'products'" class="panel">
+    <div class="panel-header">
+      <h3>Products</h3>
 
-    <form (ngSubmit)="onCreateRequest()">
-      <div class="grid-form">
-        <label>
-          Total Count
-          <input type="number" [(ngModel)]="newRequest.totalCount" name="totalCount" required />
-        </label>
-        <label>
-          Price
-          <input type="number" step="0.01" [(ngModel)]="newRequest.price" name="price" required />
-        </label>
-        <label>
-          Term (months)
-          <input type="number" [(ngModel)]="newRequest.term" name="term" required />
-        </label>
-        <label>
-          Interest Rate
-          <input type="number" step="0.01" [(ngModel)]="newRequest.interestRate" name="interestRate" required />
-        </label>
-        <label>
-          Realization Period Number
-          <input type="number" step="1" [(ngModel)]="newRequest.realizationPeriodNumber" name="RealizationPeriodNumber" required />
-        </label>
+      <div class="actions">
+        <button (click)="onProductView()" [disabled]="!selectedProduct">View</button>
+        <button (click)="onProductAdd()">Add</button>
+        <button (click)="onProductEdit()" [disabled]="!selectedProduct">Edit</button>
+        <button (click)="onProductDelete()" [disabled]="!selectedProduct">Delete</button>
+        <button class="secondary" (click)="reloadProducts()" [disabled]="productsLoading">Refresh</button>
       </div>
+    </div>
 
-      <button type="submit" [disabled]="!isActive() || loading">Request bonds</button>
-      <p *ngIf="!isActive()" class="info">Company must be Active (Status=1) to request bonds.</p>
-    </form>
+    <div class="search-row">
+      <input
+        type="text"
+        [(ngModel)]="productSearch"
+        placeholder="Search (server-side, optional)"
+        (keyup.enter)="reloadProducts()" />
+      <button class="secondary" (click)="reloadProducts()" [disabled]="productsLoading">Search</button>
+      <button class="secondary" (click)="loadMoreProducts()" [disabled]="productsLoading">Load more</button>
+    </div>
+
+    <div *ngIf="productsLoading" class="info">Loading products...</div>
+    <div *ngIf="productsError" class="error">{{ productsError }}</div>
+
+    <table *ngIf="!productsLoading && products.length > 0" class="grid">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Name</th>
+          <th>Total Qty</th>
+          <th>Price</th>
+          <th>Term</th>
+          <th>Schedule Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let p of products"
+          (click)="selectProduct(p)"
+          [class.selected]="selectedProduct?.id === p.id">
+          <td>{{ p.id }}</td>
+          <td>{{ p.name }}</td>
+          <td>{{ p.totalQuantity }}</td>
+          <td>{{ p.price }}</td>
+          <td>{{ p.term ?? '-' }}</td>
+          <td>{{ scheduleTypeLabel(p.scheduleType) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!productsLoading && products.length === 0" class="muted">
+      No products found for this company.
+    </div>
   </section>
-
-  <div *ngIf="info" class="info">{{ info }}</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
 
   <a routerLink="/" class="back-link">Back to main page</a>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" *ngIf="modalOpen">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>{{ modalTitle }}</h3>
+        <button class="icon-btn" (click)="closeModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="modalLoading" class="info">Loading...</div>
+        <div *ngIf="modalError" class="error">{{ modalError }}</div>
+
+        <!-- Request View -->
+        <ng-container *ngIf="modalMode === 'requestView' && modalRequest">
+          <dl class="details">
+            <div><dt>Id</dt><dd>{{ modalRequest.id }}</dd></div>
+            <div><dt>Row Version</dt><dd>{{ modalRequest.rowVersion | date: 'medium' }}</dd></div>
+            <div><dt>Company Id</dt><dd>{{ modalRequest.companyId }}</dd></div>
+            <div><dt>Prod Id</dt><dd>{{ modalRequest.prodId }}</dd></div>
+            <div><dt>Reg Date</dt><dd>{{ modalRequest.regDate | date: 'medium' }}</dd></div>
+            <div><dt>Status</dt><dd>{{ requestStatusLabel(modalRequest.status) }}</dd></div>
+            <div><dt>Authorize Date</dt><dd>{{ modalRequest.authorizeDate ? (modalRequest.authorizeDate | date: 'medium') : '-' }}</dd></div>
+            <div><dt>Approve Date</dt><dd>{{ modalRequest.approveDate ? (modalRequest.approveDate | date: 'medium') : '-' }}</dd></div>
+          </dl>
+        </ng-container>
+
+        <!-- Request Add -->
+        <ng-container *ngIf="modalMode === 'requestAdd'">
+          <form (ngSubmit)="submitRequestAdd()" class="form">
+            <label>
+              Select Product (recommended)
+              <select [(ngModel)]="requestForm.prodId" name="prodId">
+                <option [ngValue]="0">-- Select --</option>
+                <option *ngFor="let p of products" [ngValue]="p.id">
+                  {{ p.name }} (Id: {{ p.id }})
+                </option>
+              </select>
+            </label>
+
+            <label>
+              Or enter Product Id manually
+              <input type="number" [(ngModel)]="requestFormProdIdManual" name="prodIdManual" min="1" />
+            </label>
+
+            <div class="modal-actions">
+              <button type="submit" [disabled]="modalLoading">Create</button>
+              <button type="button" class="secondary" (click)="closeModal()">Cancel</button>
+            </div>
+          </form>
+        </ng-container>
+
+        <!-- Product View -->
+        <ng-container *ngIf="modalMode === 'productView' && modalProduct">
+          <dl class="details">
+            <div><dt>Id</dt><dd>{{ modalProduct.id }}</dd></div>
+            <div><dt>Company Id</dt><dd>{{ modalProduct.companyId }}</dd></div>
+            <div><dt>Name</dt><dd>{{ modalProduct.name }}</dd></div>
+            <div><dt>Total Quantity</dt><dd>{{ modalProduct.totalQuantity }}</dd></div>
+            <div><dt>Price</dt><dd>{{ modalProduct.price }}</dd></div>
+            <div><dt>Term</dt><dd>{{ modalProduct.term ?? '-' }}</dd></div>
+            <div><dt>Schedule Type</dt><dd>{{ scheduleTypeLabel(modalProduct.scheduleType) }} ({{ modalProduct.scheduleType }})</dd></div>
+          </dl>
+        </ng-container>
+
+        <!-- Product Add/Edit -->
+        <ng-container *ngIf="modalMode === 'productAdd' || modalMode === 'productEdit' || modalMode === 'productEditFromRequest'">
+          <form (ngSubmit)="modalMode === 'productAdd' ? submitProductAdd() : submitProductEdit()" class="form">
+            <label>
+              Name
+              <input type="text" [(ngModel)]="productForm.name" name="name" required />
+            </label>
+
+            <label>
+              Total Quantity
+              <input type="number" [(ngModel)]="productForm.totalQuantity" name="totalQuantity" min="0" required />
+            </label>
+
+            <label>
+              Price
+              <input type="number" step="0.01" [(ngModel)]="productForm.price" name="price" required />
+            </label>
+
+            <label>
+              Term (optional)
+              <input type="number" [(ngModel)]="productForm.term" name="term" />
+            </label>
+
+            <label>
+              Schedule Type (number)
+              <input type="number" [(ngModel)]="productForm.scheduleType" name="scheduleType" />
+              <span class="helper">Label: {{ scheduleTypeLabel(productForm.scheduleType) }}</span>
+            </label>
+
+            <div class="modal-actions">
+              <button type="submit" [disabled]="modalLoading">
+                {{ modalMode === 'productAdd' ? 'Create' : 'Save' }}
+              </button>
+              <button type="button" class="secondary" (click)="closeModal()">Cancel</button>
+            </div>
+          </form>
+        </ng-container>
+      </div>
+    </div>
+  </div>
 </div>

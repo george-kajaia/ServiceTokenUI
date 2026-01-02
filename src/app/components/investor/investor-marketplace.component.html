@@ -63,14 +63,8 @@
             <button
               class="action-btn secondary"
               (click)="markForResell(b)"
-              [disabled]="b.status !== 1 || markingResellId === b.id">
+              [disabled]="markingResellId === b.id">
               {{ markingResellId === b.id ? 'Marking...' : 'Mark for Resell' }}
-            </button>
-            <button
-              class="action-btn danger"
-              (click)="cancelReselling(b)"
-              [disabled]="b.status !== 0 || cancelingResellId === b.id">
-              {{ cancelingResellId === b.id ? 'Cancelling...' : 'Cancel Reselling' }}
             </button>
           </td>
         </tr>

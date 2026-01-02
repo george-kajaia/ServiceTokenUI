@@ -25,3 +25,8 @@ export interface InvestorCreateDto {
   userName: string;
   password: string;
 }
+
+export interface RequestDto {
+  companyId: number;
+  prodId: number;
+}
