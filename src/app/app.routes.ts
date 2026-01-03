@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/home/home.component';
-import { CompanyLoginComponent } from './components/company/company-login.component';
-import { CompanyDashboardComponent } from './components/company/company-dashboard.component';
-import { InvestorLoginComponent } from './components/investor/investor-login.component';
-import { InvestorMarketplaceComponent } from './components/investor/investor-marketplace.component';
-import { AdminLoginComponent } from './components/admin/admin-login.component';
-import { AdminDashboardComponent } from './components/admin/admin-dashboard.component';
+import { HomeComponent } from './features/home/home.component';
+import { CompanyLoginComponent } from './features/auth/company-login/company-login.component';
+import { CompanyDashboardComponent } from './features/company/dashboard/company-dashboard.component';
+import { InvestorLoginComponent } from './features/auth/investor-login/investor-login.component';
+import { InvestorMarketplaceComponent } from './features/investor/marketplace/investor-marketplace.component';
+import { AdminLoginComponent } from './features/auth/admin-login/admin-login.component';
+import { AdminDashboardComponent } from './features/admin/dashboard/admin-dashboard.component';
 
 export const appRoutes: Routes = [
   { path: '', component: HomeComponent, pathMatch: 'full' },
