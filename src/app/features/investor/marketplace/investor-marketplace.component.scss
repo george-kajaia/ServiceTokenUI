@@ -1,0 +1,235 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+// User theme colors (consistent with company dashboard)
+$market-bg-base: #0a0f1a;
+$market-bg-surface: #111827;
+$market-bg-elevated: #1e293b;
+$market-bg-hover: #273449;
+$market-primary: #06b6d4;
+$market-secondary: #3b82f6;
+$market-accent: #10b981;
+$market-text-primary: #f1f5f9;
+$market-text-secondary: #94a3b8;
+$market-text-muted: #64748b;
+$market-border-subtle: #1e293b;
+$market-border-default: #334155;
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: $market-bg-base;
+  color: $market-text-primary;
+  font-family: $font-family-base;
+}
+
+// ============================================
+// Marketplace Container Block
+// ============================================
+.marketplace-container {
+  @include container;
+  padding-block: $space-8;
+
+  > h2 {
+    @include text-title;
+    margin-bottom: $space-4;
+  }
+}
+
+// ============================================
+// Investor Info Block
+// ============================================
+.investor-info {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: $space-2;
+  margin-bottom: $space-6;
+  padding: $space-3 $space-4;
+  background: $market-bg-surface;
+  border: 1px solid $market-border-subtle;
+  border-radius: $radius-lg;
+  font-size: $font-size-sm;
+  color: $market-text-secondary;
+}
+
+.investor-name {
+  font-weight: $font-weight-semibold;
+  color: $market-primary;
+}
+
+// ============================================
+// Tabs Block
+// ============================================
+.tabs {
+  display: flex;
+  gap: $space-2;
+  margin-bottom: $space-6;
+  padding-bottom: $space-4;
+  border-bottom: 1px solid $market-border-subtle;
+}
+
+.tab {
+  padding: $space-2 $space-4;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $market-text-secondary;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover:not(.active) {
+    background: $market-bg-elevated;
+    color: $market-text-primary;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $market-primary, $market-secondary);
+    color: $market-bg-base;
+  }
+}
+
+// ============================================
+// Tab Content Block
+// ============================================
+.tab-content {
+  padding: $space-5;
+  background: $market-bg-surface;
+  border: 1px solid $market-border-subtle;
+  border-radius: $radius-lg;
+}
+
+// ============================================
+// Selector Block
+// ============================================
+.selector {
+  margin-bottom: $space-4;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    font-size: $font-size-sm;
+    color: $market-text-secondary;
+  }
+
+  select {
+    padding: $space-2 $space-3;
+    background: $market-bg-base;
+    border: 1px solid $market-border-default;
+    border-radius: $radius-md;
+    color: $market-text-primary;
+    font-size: $font-size-sm;
+    cursor: pointer;
+    transition: border-color $transition-base;
+    min-width: 200px;
+
+    &:focus {
+      outline: none;
+      border-color: $market-primary;
+    }
+  }
+}
+
+// ============================================
+// Table (Grid) Block
+// ============================================
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: $space-3;
+    text-align: left;
+    font-size: $font-size-sm;
+    border-bottom: 1px solid $market-border-subtle;
+  }
+
+  th {
+    background: $market-bg-base;
+    color: $market-text-secondary;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  tbody tr {
+    transition: background $transition-fast;
+
+    &:hover {
+      background: $market-bg-hover;
+    }
+  }
+}
+
+// ============================================
+// Action Buttons
+// ============================================
+.action-btn {
+  padding: $space-1 $space-3;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  border: none;
+  transition: all $transition-base;
+  @include hover-lift;
+
+  &.primary {
+    background: linear-gradient(135deg, $market-accent, $market-primary);
+    color: $market-bg-base;
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba($market-accent, 0.4);
+    }
+  }
+
+  &.secondary {
+    background: linear-gradient(135deg, $warning-500, $warning-400);
+    color: $market-bg-base;
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba($warning-500, 0.4);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ============================================
+// Messages
+// ============================================
+.info {
+  padding: $space-3 $space-4;
+  background: rgba($market-primary, 0.1);
+  border: 1px solid rgba($market-primary, 0.3);
+  border-radius: $radius-md;
+  color: $market-primary;
+  font-size: $font-size-sm;
+}
+
+.error {
+  padding: $space-3 $space-4;
+  background: rgba($error-500, 0.1);
+  border: 1px solid rgba($error-500, 0.3);
+  border-radius: $radius-md;
+  color: $error-400;
+  font-size: $font-size-sm;
+}
+
+// ============================================
+// Utility
+// ============================================
+.mono {
+  @include text-mono;
+  word-break: break-all;
+  max-width: 120px;
+  @include truncate;
+}

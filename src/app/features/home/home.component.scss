@@ -1,0 +1,159 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+// Home page theme colors (landing page specific)
+$home-bg-base: #0a0f1a;
+$home-bg-surface: rgba(17, 24, 39, 0.85);
+$home-primary: #06b6d4;
+$home-secondary: #3b82f6;
+$home-accent: #10b981;
+$home-text-primary: #f1f5f9;
+$home-text-secondary: #94a3b8;
+$home-border: rgba(148, 163, 184, 0.2);
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top center, #111827 0%, #0a0f1a 50%, #050810 100%);
+  color: $home-text-primary;
+  font-family: $font-family-base;
+}
+
+// ============================================
+// Home Page Block
+// ============================================
+.home-page {
+  @include container;
+  padding-block: $space-6 $space-16;
+}
+
+// ============================================
+// Header Block
+// ============================================
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-6;
+  padding: $space-3 $space-5;
+  background: $home-bg-surface;
+  border: 1px solid $home-border;
+  border-radius: $radius-full;
+  backdrop-filter: blur(12px);
+  box-shadow: $shadow-lg;
+
+  @include sm-down {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: $radius-xl;
+    gap: $space-4;
+  }
+}
+
+// ============================================
+// Logo Block
+// ============================================
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-3;
+
+  &-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: $radius-full;
+    @include flex-center;
+    font-weight: $font-weight-bold;
+    font-size: $font-size-sm;
+    background: linear-gradient(135deg, $home-accent, $home-primary);
+    color: $home-bg-base;
+  }
+
+  &-text {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-xs;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $home-text-primary;
+  }
+}
+
+// ============================================
+// Main Menu Block
+// ============================================
+.main-menu {
+  display: flex;
+  align-items: center;
+  gap: $space-6;
+
+  @include sm-down {
+    justify-content: space-between;
+    gap: $space-4;
+  }
+}
+
+.menu-link {
+  position: relative;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $home-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-bottom: $space-1;
+  transition: color $transition-base;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, $home-accent, $home-primary);
+    border-radius: $radius-full;
+    transition: width $transition-base;
+  }
+
+  &:hover {
+    color: $home-text-primary;
+
+    &::after {
+      width: 100%;
+    }
+  }
+}
+
+// ============================================
+// Hero Block
+// ============================================
+.hero {
+  @include flex-center;
+  padding-top: $space-16;
+  text-align: center;
+
+  @include sm-down {
+    padding-top: $space-10;
+  }
+
+  &-content {
+    max-width: 640px;
+
+    h1 {
+      font-size: clamp(#{$font-size-2xl}, 5vw, #{$font-size-3xl});
+      font-weight: $font-weight-bold;
+      line-height: $line-height-tight;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, $home-text-primary 0%, $home-text-secondary 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
+
+  &-subtitle {
+    margin-top: $space-4;
+    font-size: $font-size-base;
+    line-height: $line-height-relaxed;
+    color: $home-text-secondary;
+  }
+}
