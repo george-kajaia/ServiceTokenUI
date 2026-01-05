@@ -1,21 +1,21 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
-// User theme colors (same as company - consistent user experience)
-$auth-bg-base: #0a0f1a;
-$auth-bg-surface: #111827;
-$auth-bg-elevated: #1e293b;
+// User theme colors - Light with blue tint (same as company - consistent user experience)
+$auth-bg-base: #f8fafc;
+$auth-bg-surface: #ffffff;
+$auth-bg-elevated: #f0f9ff;
 $auth-primary: #06b6d4;
 $auth-secondary: #3b82f6;
-$auth-text-primary: #f1f5f9;
-$auth-text-secondary: #94a3b8;
+$auth-text-primary: #0c4a6e;
+$auth-text-secondary: #0369a1;
 $auth-text-muted: #64748b;
-$auth-border: #334155;
+$auth-border: #bae6fd;
 
 :host {
   display: block;
   min-height: 100vh;
-  background: radial-gradient(ellipse at top center, #111827 0%, $auth-bg-base 60%, #050810 100%);
+  background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 50%, #ecfeff 100%);
   @include flex-center;
   padding: $space-6;
 }
@@ -28,9 +28,9 @@ $auth-border: #334155;
   max-width: 420px;
   padding: $space-8;
   background: $auth-bg-surface;
-  border: 1px solid rgba($auth-border, 0.5);
+  border: 1px solid $auth-border;
   border-radius: $radius-xl;
-  box-shadow: $shadow-xl;
+  box-shadow: 0 10px 40px rgba(6, 182, 212, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
 
   h2 {
     @include text-title;
@@ -51,7 +51,7 @@ $auth-border: #334155;
   background: $auth-bg-elevated;
   border: 1px solid $auth-border;
   border-radius: $radius-md;
-  color: $auth-text-secondary;
+  color: $auth-text-muted;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   cursor: pointer;
@@ -79,17 +79,17 @@ $auth-border: #334155;
     gap: $space-2;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: $auth-text-secondary;
+    color: $auth-text-muted;
   }
 
   input {
     padding: $space-3;
-    background: $auth-bg-base;
+    background: $auth-bg-surface;
     border: 1px solid $auth-border;
     border-radius: $radius-md;
     color: $auth-text-primary;
     font-size: $font-size-sm;
-    transition: border-color $transition-base;
+    transition: all $transition-base;
 
     &::placeholder {
       color: $auth-text-muted;
@@ -98,6 +98,7 @@ $auth-border: #334155;
     &:focus {
       outline: none;
       border-color: $auth-primary;
+      box-shadow: 0 0 0 3px rgba($auth-primary, 0.1);
     }
   }
 
@@ -107,7 +108,7 @@ $auth-border: #334155;
     background: linear-gradient(135deg, $auth-primary, $auth-secondary);
     border: none;
     border-radius: $radius-md;
-    color: $auth-bg-base;
+    color: #ffffff;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     cursor: pointer;
@@ -115,7 +116,7 @@ $auth-border: #334155;
     @include hover-lift;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 16px rgba($auth-primary, 0.4);
+      box-shadow: 0 4px 16px rgba($auth-primary, 0.35);
     }
 
     &:disabled {
@@ -134,7 +135,7 @@ $auth-border: #334155;
   background: rgba($success-500, 0.1);
   border: 1px solid rgba($success-500, 0.3);
   border-radius: $radius-md;
-  color: $success-400;
+  color: $success-500;
   font-size: $font-size-sm;
 }
 
@@ -144,7 +145,7 @@ $auth-border: #334155;
   background: rgba($error-500, 0.1);
   border: 1px solid rgba($error-500, 0.3);
   border-radius: $radius-md;
-  color: $error-400;
+  color: $error-500;
   font-size: $font-size-sm;
 }
 
@@ -160,7 +161,7 @@ $auth-border: #334155;
   transition: color $transition-base;
 
   &:hover {
-    color: lighten($auth-primary, 10%);
+    color: darken($auth-primary, 10%);
     text-decoration: underline;
   }
 }

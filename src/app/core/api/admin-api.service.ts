@@ -12,6 +12,5 @@ export class AdminApiService {
 
   login(payload: { userName: string; password: string }): Observable<AdminUser> {
     return this.http.post<AdminUser>(`${this.baseUrl}/Login`, payload);
-    // return of({id: 1, userName: 'admin', userFullName: 'Admin User', password: 'admin'} as AdminUser);
   }
 }

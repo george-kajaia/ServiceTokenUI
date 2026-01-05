@@ -1,22 +1,22 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
-// Admin theme colors (distinct from user theme)
-$admin-bg-base: #09090b;
-$admin-bg-surface: #18181b;
-$admin-bg-elevated: #27272a;
+// Admin theme colors - Light with violet tint
+$admin-bg-base: #faf8ff;
+$admin-bg-surface: #ffffff;
+$admin-bg-elevated: #f3f0ff;
 $admin-primary: #8b5cf6;
-$admin-secondary: #ec4899;
-$admin-accent: #f59e0b;
-$admin-text-primary: #fafafa;
-$admin-text-secondary: #a1a1aa;
-$admin-text-muted: #71717a;
-$admin-border: #3f3f46;
+$admin-secondary: #a855f7;
+$admin-accent: #ec4899;
+$admin-text-primary: #1e1b4b;
+$admin-text-secondary: #4c4878;
+$admin-text-muted: #7c7a9c;
+$admin-border: #ddd6fe;
 
 :host {
   display: block;
   min-height: 100vh;
-  background: radial-gradient(ellipse at top center, #27272a 0%, $admin-bg-base 60%, #000 100%);
+  background: linear-gradient(135deg, #f3f0ff 0%, #faf8ff 50%, #fdf4ff 100%);
   @include flex-center;
   padding: $space-6;
 }
@@ -31,7 +31,7 @@ $admin-border: #3f3f46;
   background: $admin-bg-surface;
   border: 1px solid $admin-border;
   border-radius: $radius-lg;
-  box-shadow: $shadow-xl;
+  box-shadow: 0 10px 40px rgba(139, 92, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
 
   h2 {
     @include text-title;
@@ -63,12 +63,12 @@ $admin-border: #3f3f46;
 
   input {
     padding: $space-3;
-    background: $admin-bg-base;
+    background: $admin-bg-surface;
     border: 1px solid $admin-border;
     border-radius: $radius-sm;
     color: $admin-text-primary;
     font-size: $font-size-sm;
-    transition: border-color $transition-base;
+    transition: all $transition-base;
 
     &::placeholder {
       color: $admin-text-muted;
@@ -77,6 +77,7 @@ $admin-border: #3f3f46;
     &:focus {
       outline: none;
       border-color: $admin-primary;
+      box-shadow: 0 0 0 3px rgba($admin-primary, 0.1);
     }
   }
 
@@ -86,7 +87,7 @@ $admin-border: #3f3f46;
     background: linear-gradient(135deg, $admin-primary, $admin-secondary);
     border: none;
     border-radius: $radius-sm;
-    color: $neutral-950;
+    color: #ffffff;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
     cursor: pointer;
@@ -94,7 +95,7 @@ $admin-border: #3f3f46;
     @include hover-lift;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 16px rgba($admin-primary, 0.4);
+      box-shadow: 0 4px 16px rgba($admin-primary, 0.35);
     }
 
     &:disabled {

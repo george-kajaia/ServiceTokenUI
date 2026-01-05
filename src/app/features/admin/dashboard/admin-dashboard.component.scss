@@ -1,19 +1,19 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
-// Admin theme colors (distinct from user theme)
-$admin-bg-base: #09090b;
-$admin-bg-surface: #18181b;
-$admin-bg-elevated: #27272a;
-$admin-bg-hover: #3f3f46;
+// Admin theme colors - Light with violet tint
+$admin-bg-base: #faf8ff;
+$admin-bg-surface: #ffffff;
+$admin-bg-elevated: #f3f0ff;
+$admin-bg-hover: #ede9fe;
 $admin-primary: #8b5cf6;
-$admin-secondary: #ec4899;
-$admin-accent: #f59e0b;
-$admin-text-primary: #fafafa;
-$admin-text-secondary: #a1a1aa;
-$admin-text-muted: #71717a;
-$admin-border-subtle: #27272a;
-$admin-border-default: #3f3f46;
+$admin-secondary: #a855f7;
+$admin-accent: #ec4899;
+$admin-text-primary: #1e1b4b;
+$admin-text-secondary: #4c4878;
+$admin-text-muted: #7c7a9c;
+$admin-border-subtle: #e9e3ff;
+$admin-border-default: #ddd6fe;
 
 :host {
   display: block;
@@ -57,18 +57,18 @@ $admin-border-default: #3f3f46;
     border-radius: $radius-sm;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: $admin-text-muted;
+    color: $admin-text-secondary;
     cursor: pointer;
     transition: all $transition-base;
 
     &:hover:not(.active) {
-      background: $admin-bg-elevated;
-      color: $admin-text-primary;
+      background: $admin-primary;
+      color: #ffffff;
     }
 
     &.active {
       background: linear-gradient(135deg, $admin-primary, $admin-secondary);
-      color: $neutral-950;
+      color: #ffffff;
     }
   }
 }
@@ -81,6 +81,7 @@ $admin-border-default: #3f3f46;
   background: $admin-bg-surface;
   border: 1px solid $admin-border-subtle;
   border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   h3 {
     @include text-heading;
@@ -100,6 +101,7 @@ $admin-border-default: #3f3f46;
   margin-bottom: $space-4;
   padding: $space-4;
   background: $admin-bg-elevated;
+  border: 1px solid $admin-border-subtle;
   border-radius: $radius-md;
 }
 
@@ -144,7 +146,7 @@ select {
 // ============================================
 button {
   padding: $space-2 $space-3;
-  background: $admin-bg-elevated;
+  background: $admin-bg-surface;
   border: 1px solid $admin-border-default;
   border-radius: $radius-sm;
   color: $admin-text-primary;
@@ -155,7 +157,9 @@ button {
   @include hover-lift;
 
   &:hover:not(:disabled) {
-    background: $admin-bg-hover;
+    background: rgba($admin-primary, 0.1);
+    border-color: $admin-primary;
+    color: $admin-primary;
   }
 
   &:disabled {
@@ -167,20 +171,21 @@ button {
 // Activate button (in table cells)
 td button {
   padding: $space-1 $space-3;
-  background: linear-gradient(135deg, $admin-accent, darken($admin-accent, 10%));
+  background: linear-gradient(135deg, $admin-primary, $admin-secondary);
   border: none;
   border-radius: $radius-sm;
-  color: $neutral-950;
+  color: #ffffff;
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 4px 12px rgba($admin-accent, 0.4);
+    box-shadow: 0 4px 12px rgba($admin-primary, 0.35);
   }
 
   &:disabled {
     background: $admin-bg-elevated;
     color: $admin-text-muted;
+    border: 1px solid $admin-border-default;
   }
 }
 
@@ -191,6 +196,10 @@ td button {
   width: 100%;
   border-collapse: collapse;
   margin-top: $space-2;
+  background: $admin-bg-surface;
+  border-radius: $radius-md;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   th,
   td {
@@ -201,7 +210,7 @@ td button {
   }
 
   th {
-    background: $admin-bg-base;
+    background: $admin-bg-elevated;
     color: $admin-text-secondary;
     font-weight: $font-weight-semibold;
     font-size: $font-size-xs;
@@ -210,11 +219,15 @@ td button {
   }
 
   tbody tr {
-    transition: background $transition-fast;
+    transition: all $transition-fast;
 
     &:hover {
-      background: $admin-bg-hover;
+      background: rgba($admin-primary, 0.08);
     }
+  }
+
+  td {
+    color: $admin-text-primary;
   }
 }
 
