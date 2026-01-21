@@ -68,5 +68,8 @@
       }
     }
   },
-  "defaultProject": "bond-trading-platform-ui"
+  "defaultProject": "bond-trading-platform-ui",
+  "cli": {
+    "analytics": "5e9e9015-05c7-4327-8d7c-5ef596a2b45d"
+  }
 }

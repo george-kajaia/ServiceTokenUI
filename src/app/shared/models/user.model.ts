@@ -1,6 +1,8 @@
 export interface Investor {
   id: number;
+  rowVersion: number;
   publicKey: string;
+  status: number;
   userName: string;
   password: string;
 }

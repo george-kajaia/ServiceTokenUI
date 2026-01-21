@@ -9,7 +9,7 @@ import { ProductApiService } from '../../../core/api/product-api.service';
 
 import { Company } from '../../../shared/models/company.model';
 import { Request, RequestStatus } from '../../../shared/models/request.model';
-import { Product, ScheduleType } from '../../../shared/models/product.model';
+import { Product, SchedulePeriodType } from '../../../shared/models/product.model';
 import { RequestDto } from '../../../shared/models/dtos.model';
 
 type CompanyTab = 'requests' | 'products';
@@ -17,10 +17,10 @@ type ModalMode =
   | 'none'
   | 'requestView'
   | 'requestAdd'
+  | 'requestEdit'
   | 'productView'
   | 'productAdd'
-  | 'productEdit'
-  | 'productEditFromRequest';
+  | 'productEdit';
 
 @Component({
   selector: 'app-company-dashboard',
@@ -62,17 +62,17 @@ export class CompanyDashboardComponent implements OnInit {
   modalProduct: Product | null = null;
 
   // Forms
-  requestForm: RequestDto = { companyId: 0, prodId: 0 };
+  requestForm: RequestDto = { companyId: 0, prodId: 0, serviceTokenCount: 1 };
   requestFormProdIdManual: number | null = null;
 
   productForm: Product = {
     id: 0,
     companyId: 0,
     name: '',
-    totalQuantity: 0,
+    serviceCount: 0,
     price: 0,
     term: null,
-    scheduleType: ScheduleType.None
+    scheduleType: { periodType: SchedulePeriodType.None, periodNumber: null }
   };
 
   constructor(
@@ -129,25 +129,15 @@ export class CompanyDashboardComponent implements OnInit {
     if (!this.selectedRequest) return;
 
     this.openModal('requestView', 'Request details');
-    this.modalLoading = true;
-
-    this.requestApi.getById(this.selectedRequest.id).subscribe({
-      next: req => {
-        this.modalRequest = req;
-        this.modalLoading = false;
-      },
-      error: err => {
-        console.error(err);
-        this.modalLoading = false;
-        this.modalError = 'Failed to load request details.';
-      }
-    });
+    // We already have the request object from the grid; show it directly.
+    // (Backend GetById route token naming is inconsistent in the provided API.)
+    this.modalRequest = { ...this.selectedRequest };
   }
 
   onRequestAdd() {
     if (!this.company) return;
 
-    this.requestForm = { companyId: this.company.id, prodId: 0 };
+    this.requestForm = { companyId: this.company.id, prodId: 0, serviceTokenCount: 1 };
     this.requestFormProdIdManual = null;
     this.openModal('requestAdd', 'Add new request');
   }
@@ -163,7 +153,7 @@ export class CompanyDashboardComponent implements OnInit {
       return;
     }
 
-    const dto: RequestDto = { companyId: this.company.id, prodId };
+    const dto: RequestDto = { companyId: this.company.id, prodId, serviceTokenCount: this.requestForm.serviceTokenCount };
 
     this.modalLoading = true;
     this.modalError = '';
@@ -183,34 +173,150 @@ export class CompanyDashboardComponent implements OnInit {
   }
 
   onRequestEdit() {
-    // Per provided backend signatures, Request "Edit" uses Product.Update with the request's ProdId
-    if (!this.selectedRequest) return;
-    this.openProductEdit(this.selectedRequest.prodId, 'productEditFromRequest');
+    if (!this.company || !this.selectedRequest) return;
+
+    this.requestForm = {
+      companyId: this.company.id,
+      prodId: this.selectedRequest.prodId,
+      serviceTokenCount: this.selectedRequest.serviceTokenCount
+    };
+    this.requestFormProdIdManual = null;
+    this.openModal('requestEdit', 'Edit request');
   }
 
-  onRequestDelete() {
-    // Per provided backend signatures, Request "Delete" uses Product.Delete with the request's ProdId
-    if (!this.selectedRequest) return;
+  submitRequestEdit() {
+    if (!this.company || !this.selectedRequest) return;
 
-    const prodId = this.selectedRequest.prodId;
-    if (!confirm(`Delete product #${prodId} (from selected request)?`)) return;
+    const prodId = this.requestForm.prodId;
+    if (!prodId || prodId <= 0) {
+      this.modalError = 'Please select a valid Product Id.';
+      return;
+    }
 
-    this.productsLoading = true;
-    this.productsError = '';
+    if (!this.requestForm.serviceTokenCount || this.requestForm.serviceTokenCount <= 0) {
+      this.modalError = 'Please enter a valid Service Token Count.';
+      return;
+    }
 
-    this.productApi.delete(prodId).subscribe({
+    const dto: RequestDto = {
+      companyId: this.company.id,
+      prodId,
+      serviceTokenCount: this.requestForm.serviceTokenCount
+    };
+
+    this.modalLoading = true;
+    this.modalError = '';
+
+    this.requestApi.update(this.selectedRequest.id, this.selectedRequest.rowVersion, dto).subscribe({
       next: _ => {
-        this.productsLoading = false;
-        this.selectedRequest = null;
-        this.reloadProducts();
+        this.modalLoading = false;
+        this.closeModal();
         this.loadRequests();
       },
       error: err => {
         console.error(err);
-        this.productsLoading = false;
-        this.productsError = 'Failed to delete product.';
+        this.modalLoading = false;
+        this.modalError = 'Failed to update request.';
       }
     });
+  }
+
+  onRequestDelete() {
+    if (!this.selectedRequest) return;
+    if (!confirm(`Delete request #${this.selectedRequest.id}?`)) return;
+
+    this.requestsLoading = true;
+    this.requestsError = '';
+
+    this.requestApi.delete(this.selectedRequest.id, this.selectedRequest.rowVersion).subscribe({
+      next: _ => {
+        this.requestsLoading = false;
+        this.selectedRequest = null;
+        this.loadRequests();
+      },
+      error: err => {
+        console.error(err);
+        this.requestsLoading = false;
+        this.requestsError = 'Failed to delete request.';
+      }
+    });
+  }
+
+
+  // Row-level workflow actions (per request record)
+  authorizeRequestRow(r: Request, event?: Event) {
+    event?.stopPropagation();
+    if (Number(r.status) !== RequestStatus.Created) return;
+
+    this.requestsLoading = true;
+    this.requestsError = '';
+
+    this.requestApi.authorize(r.id, r.rowVersion).subscribe({
+      next: updated => {
+        this.requestsLoading = false;
+        this.patchRequestInList(updated);
+      },
+      error: err => {
+        console.error(err);
+        this.requestsLoading = false;
+        this.requestsError = 'Failed to authorize request.';
+      }
+    });
+  }
+
+  deauthorizeRequestRow(r: Request, event?: Event) {
+    event?.stopPropagation();
+    if (Number(r.status) !== RequestStatus.Authorised) return;
+
+    this.requestsLoading = true;
+    this.requestsError = '';
+
+    this.requestApi.deauthorize(r.id, r.rowVersion).subscribe({
+      next: updated => {
+        this.requestsLoading = false;
+        this.patchRequestInList(updated);
+      },
+      error: err => {
+        console.error(err);
+        this.requestsLoading = false;
+        this.requestsError = 'Failed to deauthorize request.';
+      }
+    });
+  }
+
+  deleteRequestRow(r: Request, event?: Event) {
+    event?.stopPropagation();
+    if (!confirm(`Delete request #${r.id}?`)) return;
+
+    this.requestsLoading = true;
+    this.requestsError = '';
+
+    this.requestApi.delete(r.id, r.rowVersion).subscribe({
+      next: _ => {
+        this.requestsLoading = false;
+        // Remove from local list
+        this.requests = this.requests.filter(x => x.id !== r.id);
+        if (this.selectedRequest?.id === r.id) this.selectedRequest = null;
+      },
+      error: err => {
+        console.error(err);
+        this.requestsLoading = false;
+        this.requestsError = 'Failed to delete request.';
+      }
+    });
+  }
+
+  private patchRequestInList(updated: Request) {
+    const idx = this.requests.findIndex(x => x.id === updated.id);
+    if (idx >= 0) {
+      this.requests[idx] = updated;
+    } else {
+      this.requests = [updated, ...this.requests];
+    }
+
+    if (this.selectedRequest?.id === updated.id) {
+      this.selectedRequest = updated;
+    }
   }
 
   // -----------------------------
@@ -290,10 +396,10 @@ export class CompanyDashboardComponent implements OnInit {
       id: 0,
       companyId: this.company.id,
       name: '',
-      totalQuantity: 0,
+      serviceCount: 0,
       price: 0,
       term: null,
-      scheduleType: ScheduleType.None
+      scheduleType: { periodType: SchedulePeriodType.None, periodNumber: null }
     };
 
     this.openModal('productAdd', 'Add new product');
@@ -326,18 +432,18 @@ export class CompanyDashboardComponent implements OnInit {
 
   onProductEdit() {
     if (!this.selectedProduct) return;
-    this.openProductEdit(this.selectedProduct.id, 'productEdit');
+    this.openProductEdit(this.selectedProduct.id);
   }
 
-  private openProductEdit(prodId: number, mode: 'productEdit' | 'productEditFromRequest') {
-    this.openModal(mode, 'Edit product');
+  private openProductEdit(prodId: number) {
+    this.openModal('productEdit', 'Edit product');
     this.modalLoading = true;
 
     this.productApi.getById(prodId).subscribe({
       next: prod => {
-        // Normalize term (null when missing)
         const term = prod.term === undefined ? null : prod.term;
-        this.productForm = { ...prod, term: term as any };
+        const scheduleType = prod.scheduleType ?? { periodType: SchedulePeriodType.None, periodNumber: null };
+        this.productForm = { ...prod, term: term as any, scheduleType };
         this.modalLoading = false;
       },
       error: err => {
@@ -431,33 +537,37 @@ export class CompanyDashboardComponent implements OnInit {
     switch (status) {
       case RequestStatus.None:
         return 'None';
-      case RequestStatus.Registered:
-        return 'Registered';
-      case RequestStatus.Authorized:
-        return 'Authorized';
+      case RequestStatus.Created:
+        return 'Created';
+      case RequestStatus.Authorised:
+        return 'Authorised';
       case RequestStatus.Approved:
         return 'Approved';
-      case RequestStatus.Rejected:
-        return 'Rejected';
       default:
         return `Status ${status}`;
     }
   }
 
-  scheduleTypeLabel(value: number): string {
+  scheduleTypeLabel(periodType: number, periodNumber?: number | null): string {
+    const label = this.schedulePeriodLabel(periodType);
+    if (!periodNumber || periodNumber <= 0) return label;
+    return `${label} / ${periodNumber}`;
+  }
+
+  schedulePeriodLabel(value: number): string {
     switch (value) {
-      case ScheduleType.None:
+      case SchedulePeriodType.None:
         return 'None';
-      case ScheduleType.Monthly:
+      case SchedulePeriodType.Daily:
+        return 'Daily';
+      case SchedulePeriodType.Weekly:
+        return 'Weekly';
+      case SchedulePeriodType.Monthly:
         return 'Monthly';
-      case ScheduleType.Quarterly:
-        return 'Quarterly';
-      case ScheduleType.SemiAnnual:
-        return 'Semi-Annual';
-      case ScheduleType.Annual:
-        return 'Annual';
+      case SchedulePeriodType.Yearly:
+        return 'Yearly';
       default:
-        return `Type ${value}`;
+        return `Period ${value}`;
     }
   }
 }

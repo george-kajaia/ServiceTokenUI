@@ -213,6 +213,13 @@ $dash-border-default: #334155;
   }
 }
 
+.row-actions {
+  display: flex;
+  gap: $space-2;
+  align-items: center;
+}
+
+
 // ============================================
 // Button Styles
 // ============================================
@@ -247,6 +254,18 @@ button {
       color: $dash-text-primary;
     }
   }
+
+  &.danger {
+    background: rgba($error-500, 0.10);
+    border-color: rgba($error-500, 0.40);
+    color: $error-400;
+
+    &:hover:not(:disabled) {
+      background: rgba($error-500, 0.16);
+      border-color: rgba($error-500, 0.55);
+    }
+  }
+
 }
 
 // ============================================

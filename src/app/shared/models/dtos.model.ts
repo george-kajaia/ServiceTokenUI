@@ -3,30 +3,24 @@ export interface LoginCredentialDto {
   password: string;
 }
 
-export interface CompanyCreateDto {
+// Matches ServiceTokenApi.Dto.CompanyRequestDto
+export interface CompanyRequestDto {
   name: string;
   taxCode: string;
   userName: string;
   password: string;
 }
 
-export interface BondRequestDto {
-  companyId: number;
-  status: number;
-  totalCount: number;
-  price: number;
-  term: number;
-  interestRate: number;
-  realizationPeriodNumber: number
-}
-
+// Matches ServiceTokenApi.Dto.InvestorCreateDto (entity fields)
 export interface InvestorCreateDto {
   publicKey: string;
   userName: string;
   password: string;
 }
 
+// Matches ServiceTokenApi.Dto.RequestDto
 export interface RequestDto {
   companyId: number;
   prodId: number;
+  serviceTokenCount: number;
 }
