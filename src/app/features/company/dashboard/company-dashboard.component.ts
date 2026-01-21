@@ -306,7 +306,17 @@ export class CompanyDashboardComponent implements OnInit {
     });
   }
 
-  private patchRequestInList(updated: Request) {
+  private patchRequestInList(updated: Request | null | undefined) {
+    // Some backend actions may return an empty body (null) even though the request was updated.
+    // In that case, fall back to reloading the list instead of crashing the UI.
+    if (!updated || (updated as any).id == null) {
+      this.loadRequests();
+      return;
+    }
+
+    // Defensive: ensure there are no null items in the local list.
+    this.requests = (this.requests ?? []).filter((x): x is Request => !!x && (x as any).id != null);
+
     const idx = this.requests.findIndex(x => x.id === updated.id);
     if (idx >= 0) {
       this.requests[idx] = updated;
