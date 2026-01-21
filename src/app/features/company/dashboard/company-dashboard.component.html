@@ -31,10 +31,11 @@
       <h3>Requests</h3>
 
       <div class="actions">
+        <button class="secondary" (click)="loadRequests()" [disabled]="requestsLoading">Refresh</button>
         <button (click)="onRequestView()" [disabled]="!selectedRequest">View</button>
         <button (click)="onRequestAdd()">Add</button>
-        <button (click)="onRequestEdit()" [disabled]="!selectedRequest">Edit</button>
-        <button class="secondary" (click)="loadRequests()" [disabled]="requestsLoading">Refresh</button>
+        <button (click)="onRequestEdit()" [disabled]="!selectedRequest || (+selectedRequest?.status) !== 1">Edit</button>
+        <button class="danger" (click)="onRequestDelete()" [disabled]="requestsLoading || !selectedRequest || (+selectedRequest?.status) !== 1">Delete</button>
       </div>
     </div>
 
@@ -70,7 +71,6 @@
             <div class="row-actions">
               <button (click)="authorizeRequestRow(r, $event)" [disabled]="requestsLoading || (+r.status) !== 1">Authorize</button>
               <button (click)="deauthorizeRequestRow(r, $event)" [disabled]="requestsLoading || (+r.status) !== 2">Deauthorize</button>
-              <button class="danger" (click)="deleteRequestRow(r, $event)" [disabled]="requestsLoading">Delete</button>
             </div>
           </td>
         </tr>
