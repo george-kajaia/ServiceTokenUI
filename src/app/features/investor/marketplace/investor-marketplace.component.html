@@ -1,185 +1,184 @@
-<div class="marketplace-container">
+<div class="dashboard-container">
   <h2>Investor Marketplace</h2>
 
-  <div class="investor-info" *ngIf="investorName">
-    Logged in as: <span class="investor-name">{{ investorName }}</span>
-  </div>
-
-
   <div class="tabs">
-    <button
-      class="tab"
-      [class.active]="activeTab === 'yourBonds'"
-      (click)="setTab('yourBonds')">
-      Your Bonds
+    <button class="tab" [class.active]="activeTab === 'yourTokens'" (click)="setTab('yourTokens')">
+      Your Service Tokens
     </button>
-
-    <button
-      class="tab"
-      [class.active]="activeTab === 'companiesBonds'"
-      (click)="setTab('companiesBonds')">
-      Companies Bonds
+    <button class="tab" [class.active]="activeTab === 'primaryMarket'" (click)="setTab('primaryMarket')">
+      Primary Market
     </button>
-
-    <button
-      class="tab"
-      [class.active]="activeTab === 'secondaryMarket'"
-      (click)="setTab('secondaryMarket')">
+    <button class="tab" [class.active]="activeTab === 'secondaryMarket'" (click)="setTab('secondaryMarket')">
       Secondary Market
     </button>
   </div>
 
-  <!-- Tab 1: Your Bonds -->
-  <section *ngIf="activeTab === 'yourBonds'" class="tab-content">
-    <div *ngIf="yourBondsLoading" class="info">Loading your bonds...</div>
-    <div *ngIf="!yourBondsLoading && yourBonds.length === 0" class="info">You do not have any bonds yet.</div>
+  <div *ngIf="loading" class="info">Loading...</div>
 
-    <table class="grid" *ngIf="!yourBondsLoading && yourBonds.length > 0">
+  <div class="filters" *ngIf="activeTab !== 'yourTokens'">
+    <label>
+      Company
+      <select [(ngModel)]="marketCompanyId">
+        <option [ngValue]="-1">All</option>
+        <option *ngFor="let c of companies" [ngValue]="c.id">{{ c.name }} ({{ c.id }})</option>
+      </select>
+    </label>
+
+    <label>
+      Request Id (optional)
+      <input type="number" [(ngModel)]="marketRequestId" min="-1" />
+    </label>
+
+    <button class="secondary" (click)="activeTab === 'primaryMarket' ? loadPrimaryMarket() : loadSecondaryMarket()">
+      Apply
+    </button>
+  </div>
+
+  <!-- Your tokens -->
+  <section *ngIf="activeTab === 'yourTokens'" class="panel">
+    <div class="panel-header">
+      <h3>Your Tokens</h3>
+      <div class="actions">
+        <button class="secondary" (click)="loadYourTokens()">Refresh</button>
+      </div>
+    </div>
+
+    <table *ngIf="!loading && yourTokens.length > 0" class="grid">
       <thead>
         <tr>
+          <th>Token Id</th>
+          <th>RowVersion</th>
           <th>Company</th>
-          <th>Bond Id</th>
-          <th>Price</th>
-          <th>Interest %</th>
+          <th>Request</th>
+          <th>Product</th>
           <th>Status</th>
+          <th>Count</th>
+          <th>ServiceCount</th>
+          <th>Schedule</th>
           <th>Start</th>
           <th>End</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of yourTokens">
+          <td>{{ t.id }}</td>
+          <td>{{ t.rowVersion }}</td>
+          <td>{{ t.companyName }} ({{ t.companyId }})</td>
+          <td>{{ t.requestId }}</td>
+          <td>{{ t.prodId }}</td>
+          <td>{{ tokenStatusLabel(t.status) }}</td>
+          <td>{{ t.count }}</td>
+          <td>{{ t.serviceCount }}</td>
+          <td>{{ scheduleTypeLabel(t.scheduleType) }}</td>
+          <td>{{ t.startDate | date: 'medium' }}</td>
+          <td>{{ t.endDate ? (t.endDate | date: 'medium') : '-' }}</td>
+          <td class="action-col">
+            <button (click)="markForResell(t)" [disabled]="(+t.status) !== 1">Mark for resell</button>
+            <button (click)="cancelReselling(t)" [disabled]="(+t.status) !== 0">Cancel reselling</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!loading && yourTokens.length === 0" class="muted">No tokens found.</div>
+  </section>
+
+  <!-- Primary market -->
+  <section *ngIf="activeTab === 'primaryMarket'" class="panel">
+    <div class="panel-header">
+      <h3>Primary Market Tokens</h3>
+      <div class="actions">
+        <button class="secondary" (click)="loadPrimaryMarket()">Refresh</button>
+      </div>
+    </div>
+
+    <table *ngIf="!loading && primaryMarketTokens.length > 0" class="grid">
+      <thead>
+        <tr>
+          <th>Token Id</th>
+          <th>RowVersion</th>
+          <th>Company</th>
+          <th>Request</th>
+          <th>Product</th>
+          <th>Count</th>
+          <th>ServiceCount</th>
+          <th>Schedule</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of primaryMarketTokens">
+          <td>{{ t.id }}</td>
+          <td>{{ t.rowVersion }}</td>
+          <td>{{ t.companyName }} ({{ t.companyId }})</td>
+          <td>{{ t.requestId }}</td>
+          <td>{{ t.prodId }}</td>
+          <td>{{ t.count }}</td>
+          <td>{{ t.serviceCount }}</td>
+          <td>{{ scheduleTypeLabel(t.scheduleType) }}</td>
+          <td>{{ t.startDate | date: 'medium' }}</td>
+          <td>{{ t.endDate ? (t.endDate | date: 'medium') : '-' }}</td>
+          <td class="action-col">
+            <button (click)="buyPrimary(t)">Buy</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!loading && primaryMarketTokens.length === 0" class="muted">No tokens found.</div>
+  </section>
+
+  <!-- Secondary market -->
+  <section *ngIf="activeTab === 'secondaryMarket'" class="panel">
+    <div class="panel-header">
+      <h3>Secondary Market Tokens</h3>
+      <div class="actions">
+        <button class="secondary" (click)="loadSecondaryMarket()">Refresh</button>
+      </div>
+    </div>
+
+    <table *ngIf="!loading && secondaryMarketTokens.length > 0" class="grid">
+      <thead>
+        <tr>
+          <th>Token Id</th>
+          <th>RowVersion</th>
+          <th>Company</th>
+          <th>Request</th>
+          <th>Product</th>
           <th>Owner</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let b of yourBonds">
-          <td>{{ b.companyName }}</td>
-          <td>{{ b.id }}</td>
-          <td>{{ b.price }}</td>
-          <td>{{ b.interestRate }}</td>
-          <td>{{ b.status }}</td>
-          <td>{{ b.startDate | date: 'yyyy-MM-dd' }}</td>
-          <td>{{ b.endDate   | date: 'yyyy-MM-dd' }}</td>
-          <td class="mono">{{ b.ownerPublicKey }}</td>
-          <td>
-            <button
-              class="action-btn secondary"
-              (click)="markForResell(b)"
-              [disabled]="markingResellId === b.id">
-              {{ markingResellId === b.id ? 'Marking...' : 'Mark for Resell' }}
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- Tab 2: Companies Bonds (Primary Market) -->
-  <section *ngIf="activeTab === 'companiesBonds'" class="tab-content">
-    <div class="selector">
-      <label>
-        Company:
-        <select [(ngModel)]="selectedCompanyId" (change)="onCompanyChange()">
-          <option [ngValue]="null">-- select company --</option>
-          <option *ngFor="let c of companies" [ngValue]="c.id">
-            {{ c.name }}
-          </option>
-        </select>
-      </label>
-    </div>
-
-    <div *ngIf="companiesLoading" class="info">Loading companies...</div>
-    <div *ngIf="primaryBondsLoading" class="info">Loading company bonds...</div>
-
-    <table class="grid" *ngIf="!primaryBondsLoading && primaryBonds.length > 0">
-      <thead>
-        <tr>
-          <th>Company</th>
-          <th>Bond Id</th>
-          <th>Price</th>
-          <th>Interest %</th>
-          <th>Status</th>
+          <th>Count</th>
+          <th>ServiceCount</th>
+          <th>Schedule</th>
           <th>Start</th>
           <th>End</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let b of primaryBonds">
-          <td>{{ b.companyName }}</td>
-          <td>{{ b.id }}</td>
-          <td>{{ b.price }}</td>
-          <td>{{ b.interestRate }}</td>
-          <td>{{ b.status }}</td>
-          <td>{{ b.startDate | date: 'yyyy-MM-dd' }}</td>
-          <td>{{ b.endDate   | date: 'yyyy-MM-dd' }}</td>
-          <td>
-            <button
-              class="action-btn primary"
-              (click)="buyPrimary(b)"
-              [disabled]="buyingPrimaryId === b.id">
-              {{ buyingPrimaryId === b.id ? 'Buying...' : 'Buy' }}
-            </button>
+        <tr *ngFor="let t of secondaryMarketTokens">
+          <td>{{ t.id }}</td>
+          <td>{{ t.rowVersion }}</td>
+          <td>{{ t.companyName }} ({{ t.companyId }})</td>
+          <td>{{ t.requestId }}</td>
+          <td>{{ t.prodId }}</td>
+          <td>{{ t.ownerPublicKey }}</td>
+          <td>{{ t.count }}</td>
+          <td>{{ t.serviceCount }}</td>
+          <td>{{ scheduleTypeLabel(t.scheduleType) }}</td>
+          <td>{{ t.startDate | date: 'medium' }}</td>
+          <td>{{ t.endDate ? (t.endDate | date: 'medium') : '-' }}</td>
+          <td class="action-col">
+            <button (click)="buySecondary(t)">Buy</button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <div
-      *ngIf="
-        selectedCompanyId &&
-        !primaryBondsLoading &&
-        primaryBonds.length === 0
-      "
-      class="info">
-      This company has no bonds on the primary market.
-    </div>
+    <div *ngIf="!loading && secondaryMarketTokens.length === 0" class="muted">No tokens found.</div>
   </section>
 
-  <!-- Tab 3: Secondary Market -->
-  <section *ngIf="activeTab === 'secondaryMarket'" class="tab-content">
-    <div *ngIf="secondaryBondsLoading" class="info">Loading secondary market bonds...</div>
-
-    <table class="grid" *ngIf="!secondaryBondsLoading && secondaryBonds.length > 0">
-      <thead>
-        <tr>
-          <th>Company</th>
-          <th>Bond Id</th>
-          <th>Price</th>
-          <th>Interest %</th>
-          <th>Status</th>
-          <th>Start</th>
-          <th>End</th>
-          <th>Current Owner</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let b of secondaryBonds">
-          <td>{{ b.companyName }}</td>
-          <td>{{ b.id }}</td>
-          <td>{{ b.price }}</td>
-          <td>{{ b.interestRate }}</td>
-          <td>{{ b.status }}</td>
-          <td>{{ b.startDate | date: 'yyyy-MM-dd' }}</td>
-          <td>{{ b.endDate   | date: 'yyyy-MM-dd' }}</td>
-          <td class="mono">{{ b.ownerPublicKey }}</td>
-          <td>
-            <button
-              class="action-btn primary"
-              (click)="buySecondary(b)"
-              [disabled]="buyingSecondaryId === b.id">
-              {{ buyingSecondaryId === b.id ? 'Buying...' : 'Buy' }}
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div
-      *ngIf="
-        !secondaryBondsLoading &&
-        secondaryBonds.length === 0
-      "
-      class="info">
-      There are no bonds available on the secondary market right now.
-    </div>
-  </section>
+  <a routerLink="/" class="back-link">Back to main page</a>
 </div>

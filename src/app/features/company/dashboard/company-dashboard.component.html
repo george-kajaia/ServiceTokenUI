@@ -31,11 +31,11 @@
       <h3>Requests</h3>
 
       <div class="actions">
+        <button class="secondary" (click)="loadRequests()" [disabled]="requestsLoading">Refresh</button>
         <button (click)="onRequestView()" [disabled]="!selectedRequest">View</button>
         <button (click)="onRequestAdd()">Add</button>
-        <button (click)="onRequestEdit()" [disabled]="!selectedRequest">Edit</button>
-        <button (click)="onRequestDelete()" [disabled]="!selectedRequest">Delete</button>
-        <button class="secondary" (click)="loadRequests()" [disabled]="requestsLoading">Refresh</button>
+        <button (click)="onRequestEdit()" [disabled]="!selectedRequest || (+selectedRequest?.status) !== 1">Edit</button>
+        <button class="danger" (click)="onRequestDelete()" [disabled]="requestsLoading || !selectedRequest || (+selectedRequest?.status) !== 1">Delete</button>
       </div>
     </div>
 
@@ -46,10 +46,12 @@
         <tr>
           <th>Id</th>
           <th>Prod Id</th>
+          <th>ServiceTokenCount</th>
           <th>Reg Date</th>
           <th>Status</th>
           <th>Authorize Date</th>
           <th>Approve Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -59,10 +61,17 @@
           [class.selected]="selectedRequest?.id === r.id">
           <td>{{ r.id }}</td>
           <td>{{ r.prodId }}</td>
+          <td>{{ r.serviceTokenCount }}</td>
           <td>{{ r.regDate | date: 'medium' }}</td>
           <td>{{ requestStatusLabel(r.status) }}</td>
           <td>{{ r.authorizeDate ? (r.authorizeDate | date: 'medium') : '-' }}</td>
           <td>{{ r.approveDate ? (r.approveDate | date: 'medium') : '-' }}</td>
+          <td>
+            <div class="row-actions">
+              <button (click)="authorizeRequestRow(r, $event)" [disabled]="requestsLoading || (+r.status) !== 1">Authorize</button>
+              <button (click)="deauthorizeRequestRow(r, $event)" [disabled]="requestsLoading || (+r.status) !== 2">Deauthorize</button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -71,9 +80,7 @@
       No requests found for this company.
     </div>
 
-    <div class="hint">
-      Note: per the provided backend signatures, the Requests tab uses Product.Update/Delete with the selected request’s ProdId.
-    </div>
+
   </section>
 
   <!-- Products Tab -->
@@ -107,7 +114,7 @@
         <tr>
           <th>Id</th>
           <th>Name</th>
-          <th>Total Qty</th>
+          <th>Service Count</th>
           <th>Price</th>
           <th>Term</th>
           <th>Schedule Type</th>
@@ -120,10 +127,10 @@
           [class.selected]="selectedProduct?.id === p.id">
           <td>{{ p.id }}</td>
           <td>{{ p.name }}</td>
-          <td>{{ p.totalQuantity }}</td>
+          <td>{{ p.serviceCount }}</td>
           <td>{{ p.price }}</td>
           <td>{{ p.term ?? '-' }}</td>
-          <td>{{ scheduleTypeLabel(p.scheduleType) }}</td>
+          <td>{{ scheduleTypeLabel(p.scheduleType.periodType, p.scheduleType.periodNumber) }}</td>
         </tr>
       </tbody>
     </table>
@@ -157,9 +164,10 @@
         <ng-container *ngIf="modalMode === 'requestView' && modalRequest">
           <dl class="details">
             <div><dt>Id</dt><dd>{{ modalRequest.id }}</dd></div>
-            <div><dt>Row Version</dt><dd>{{ modalRequest.rowVersion | date: 'medium' }}</dd></div>
+            <div><dt>Row Version</dt><dd>{{ modalRequest.rowVersion }}</dd></div>
             <div><dt>Company Id</dt><dd>{{ modalRequest.companyId }}</dd></div>
             <div><dt>Prod Id</dt><dd>{{ modalRequest.prodId }}</dd></div>
+            <div><dt>ServiceTokenCount</dt><dd>{{ modalRequest.serviceTokenCount }}</dd></div>
             <div><dt>Reg Date</dt><dd>{{ modalRequest.regDate | date: 'medium' }}</dd></div>
             <div><dt>Status</dt><dd>{{ requestStatusLabel(modalRequest.status) }}</dd></div>
             <div><dt>Authorize Date</dt><dd>{{ modalRequest.authorizeDate ? (modalRequest.authorizeDate | date: 'medium') : '-' }}</dd></div>
@@ -167,9 +175,9 @@
           </dl>
         </ng-container>
 
-        <!-- Request Add -->
-        <ng-container *ngIf="modalMode === 'requestAdd'">
-          <form (ngSubmit)="submitRequestAdd()" class="form">
+        <!-- Request Add/Edit -->
+        <ng-container *ngIf="modalMode === 'requestAdd' || modalMode === 'requestEdit'">
+          <form (ngSubmit)="modalMode === 'requestAdd' ? submitRequestAdd() : submitRequestEdit()" class="form">
             <label>
               Select Product (recommended)
               <select [(ngModel)]="requestForm.prodId" name="prodId">
@@ -185,8 +193,15 @@
               <input type="number" [(ngModel)]="requestFormProdIdManual" name="prodIdManual" min="1" />
             </label>
 
+            <label>
+              Service Token Count
+              <input type="number" [(ngModel)]="requestForm.serviceTokenCount" name="serviceTokenCount" min="1" required />
+            </label>
+
             <div class="modal-actions">
-              <button type="submit" [disabled]="modalLoading">Create</button>
+              <button type="submit" [disabled]="modalLoading">
+                {{ modalMode === 'requestAdd' ? 'Create' : 'Save' }}
+              </button>
               <button type="button" class="secondary" (click)="closeModal()">Cancel</button>
             </div>
           </form>
@@ -198,15 +213,15 @@
             <div><dt>Id</dt><dd>{{ modalProduct.id }}</dd></div>
             <div><dt>Company Id</dt><dd>{{ modalProduct.companyId }}</dd></div>
             <div><dt>Name</dt><dd>{{ modalProduct.name }}</dd></div>
-            <div><dt>Total Quantity</dt><dd>{{ modalProduct.totalQuantity }}</dd></div>
+            <div><dt>Service Count</dt><dd>{{ modalProduct.serviceCount }}</dd></div>
             <div><dt>Price</dt><dd>{{ modalProduct.price }}</dd></div>
             <div><dt>Term</dt><dd>{{ modalProduct.term ?? '-' }}</dd></div>
-            <div><dt>Schedule Type</dt><dd>{{ scheduleTypeLabel(modalProduct.scheduleType) }} ({{ modalProduct.scheduleType }})</dd></div>
+            <div><dt>Schedule Type</dt><dd>{{ scheduleTypeLabel(modalProduct.scheduleType.periodType, modalProduct.scheduleType.periodNumber) }}</dd></div>
           </dl>
         </ng-container>
 
         <!-- Product Add/Edit -->
-        <ng-container *ngIf="modalMode === 'productAdd' || modalMode === 'productEdit' || modalMode === 'productEditFromRequest'">
+        <ng-container *ngIf="modalMode === 'productAdd' || modalMode === 'productEdit'">
           <form #productFormRef="ngForm" (ngSubmit)="productFormRef.valid ? (modalMode === 'productAdd' ? submitProductAdd() : submitProductEdit()) : null" class="form">
             <label [class.has-error]="nameInput.invalid && nameInput.touched">
               Name
@@ -223,18 +238,18 @@
               </span>
             </label>
 
-            <label [class.has-error]="qtyInput.invalid && qtyInput.touched">
-              Total Quantity
+            <label [class.has-error]="serviceCountInput.invalid && serviceCountInput.touched">
+              Service Count
               <input
                 type="number"
-                [(ngModel)]="productForm.totalQuantity"
-                name="totalQuantity"
-                #qtyInput="ngModel"
-                min="1"
+                [(ngModel)]="productForm.serviceCount"
+                name="serviceCount"
+                #serviceCountInput="ngModel"
+                min="0"
                 required />
-              <span class="validation-error" *ngIf="qtyInput.invalid && qtyInput.touched">
-                <span *ngIf="qtyInput.errors?.['required']">Quantity is required</span>
-                <span *ngIf="qtyInput.errors?.['min']">Quantity must be at least 1</span>
+              <span class="validation-error" *ngIf="serviceCountInput.invalid && serviceCountInput.touched">
+                <span *ngIf="serviceCountInput.errors?.['required']">Service count is required</span>
+                <span *ngIf="serviceCountInput.errors?.['min']">Service count must be at least 0</span>
               </span>
             </label>
 
@@ -260,14 +275,20 @@
             </label>
 
             <label>
-              Schedule Type
-              <select [(ngModel)]="productForm.scheduleType" name="scheduleType">
+              Schedule Period Type
+              <select [(ngModel)]="productForm.scheduleType.periodType" name="periodType">
                 <option [ngValue]="0">None</option>
-                <option [ngValue]="1">Monthly</option>
-                <option [ngValue]="2">Quarterly</option>
-                <option [ngValue]="3">Semi-Annual</option>
-                <option [ngValue]="4">Annual</option>
+                <option [ngValue]="1">Daily</option>
+                <option [ngValue]="2">Weekly</option>
+                <option [ngValue]="3">Monthly</option>
+                <option [ngValue]="4">Yearly</option>
               </select>
+            </label>
+
+            <label>
+              Schedule Period Number (optional)
+              <input type="number" [(ngModel)]="productForm.scheduleType.periodNumber" name="periodNumber" min="1" />
+              <span class="helper">Label: {{ scheduleTypeLabel(productForm.scheduleType.periodType, productForm.scheduleType.periodNumber) }}</span>
             </label>
 
             <div class="modal-actions">

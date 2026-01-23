@@ -11,7 +11,7 @@ import { DialogService } from '../../../core/services/dialog.service';
 
 import { Company } from '../../../shared/models/company.model';
 import { Request, RequestStatus } from '../../../shared/models/request.model';
-import { Product, ScheduleType } from '../../../shared/models/product.model';
+import { Product, SchedulePeriodType } from '../../../shared/models/product.model';
 import { RequestDto } from '../../../shared/models/dtos.model';
 
 type CompanyTab = 'requests' | 'products';
@@ -19,10 +19,10 @@ type ModalMode =
   | 'none'
   | 'requestView'
   | 'requestAdd'
+  | 'requestEdit'
   | 'productView'
   | 'productAdd'
-  | 'productEdit'
-  | 'productEditFromRequest';
+  | 'productEdit';
 
 @Component({
   selector: 'app-company-dashboard',
@@ -62,17 +62,17 @@ export class CompanyDashboardComponent implements OnInit {
   modalProduct: Product | null = null;
 
   // Forms
-  requestForm: RequestDto = { companyId: 0, prodId: 0 };
+  requestForm: RequestDto = { companyId: 0, prodId: 0, serviceTokenCount: 1 };
   requestFormProdIdManual: number | null = null;
 
   productForm: Product = {
     id: 0,
     companyId: 0,
     name: '',
-    totalQuantity: 0,
+    serviceCount: 0,
     price: 0,
     term: null,
-    scheduleType: ScheduleType.None
+    scheduleType: { periodType: SchedulePeriodType.None, periodNumber: null }
   };
 
   private toast = inject(ToastService);
@@ -134,26 +134,14 @@ export class CompanyDashboardComponent implements OnInit {
     if (!this.selectedRequest) return;
 
     this.openModal('requestView', 'Request details');
-    this.modalLoading = true;
-
-    this.requestApi.getById(this.selectedRequest.id).subscribe({
-      next: req => {
-        this.modalRequest = req;
-        this.modalLoading = false;
-      },
-      error: err => {
-        console.error(err);
-        this.modalLoading = false;
-        this.closeModal();
-        this.toast.error('Could not load request details. Please try again.');
-      }
-    });
+    // We already have the request object from the grid; show it directly.
+    this.modalRequest = { ...this.selectedRequest };
   }
 
   onRequestAdd() {
     if (!this.company) return;
 
-    this.requestForm = { companyId: this.company.id, prodId: 0 };
+    this.requestForm = { companyId: this.company.id, prodId: 0, serviceTokenCount: 1 };
     this.requestFormProdIdManual = null;
     this.openModal('requestAdd', 'Add new request');
   }
@@ -169,7 +157,7 @@ export class CompanyDashboardComponent implements OnInit {
       return;
     }
 
-    const dto: RequestDto = { companyId: this.company.id, prodId };
+    const dto: RequestDto = { companyId: this.company.id, prodId, serviceTokenCount: this.requestForm.serviceTokenCount };
 
     this.modalLoading = true;
     this.modalError = '';
@@ -190,40 +178,145 @@ export class CompanyDashboardComponent implements OnInit {
   }
 
   onRequestEdit() {
-    // Per provided backend signatures, Request "Edit" uses Product.Update with the request's ProdId
-    if (!this.selectedRequest) return;
-    this.openProductEdit(this.selectedRequest.prodId, 'productEditFromRequest');
+    if (!this.company || !this.selectedRequest) return;
+
+    this.requestForm = {
+      companyId: this.company.id,
+      prodId: this.selectedRequest.prodId,
+      serviceTokenCount: this.selectedRequest.serviceTokenCount
+    };
+    this.requestFormProdIdManual = null;
+    this.openModal('requestEdit', 'Edit request');
+  }
+
+  submitRequestEdit() {
+    if (!this.company || !this.selectedRequest) return;
+
+    const prodId = this.requestForm.prodId;
+    if (!prodId || prodId <= 0) {
+      this.modalError = 'Please select a valid Product Id.';
+      return;
+    }
+
+    if (!this.requestForm.serviceTokenCount || this.requestForm.serviceTokenCount <= 0) {
+      this.modalError = 'Please enter a valid Service Token Count.';
+      return;
+    }
+
+    const dto: RequestDto = {
+      companyId: this.company.id,
+      prodId,
+      serviceTokenCount: this.requestForm.serviceTokenCount
+    };
+
+    this.modalLoading = true;
+    this.modalError = '';
+
+    this.requestApi.update(this.selectedRequest.id, this.selectedRequest.rowVersion, dto).subscribe({
+      next: _ => {
+        this.modalLoading = false;
+        this.closeModal();
+        this.loadRequests();
+        this.toast.success('Request updated successfully.');
+      },
+      error: err => {
+        console.error(err);
+        this.modalLoading = false;
+        this.toast.error('Could not update request. Please try again.');
+      }
+    });
   }
 
   async onRequestDelete() {
-    // Per provided backend signatures, Request "Delete" uses Product.Delete with the request's ProdId
     if (!this.selectedRequest) return;
 
-    const prodId = this.selectedRequest.prodId;
     const confirmed = await this.dialog.confirm({
-      title: 'Delete Product',
-      message: `Are you sure you want to delete product #${prodId} from this request?`,
+      title: 'Delete Request',
+      message: `Are you sure you want to delete request #${this.selectedRequest.id}? This action cannot be undone.`,
       confirmText: 'Delete',
       type: 'danger'
     });
     if (!confirmed) return;
 
-    this.productsLoading = true;
+    this.requestsLoading = true;
 
-    this.productApi.delete(prodId).subscribe({
+    this.requestApi.delete(this.selectedRequest.id, this.selectedRequest.rowVersion).subscribe({
       next: _ => {
-        this.productsLoading = false;
+        this.requestsLoading = false;
         this.selectedRequest = null;
-        this.reloadProducts();
         this.loadRequests();
-        this.toast.success('Product deleted successfully.');
+        this.toast.success('Request deleted successfully.');
       },
       error: err => {
         console.error(err);
-        this.productsLoading = false;
-        this.toast.error('Could not delete product. It may be in use or already deleted.');
+        this.requestsLoading = false;
+        this.toast.error('Could not delete request. Please try again.');
       }
     });
+  }
+
+  // Row-level workflow actions (per request record)
+  authorizeRequestRow(r: Request, event?: Event) {
+    event?.stopPropagation();
+    if (Number(r.status) !== RequestStatus.Created) return;
+
+    this.requestsLoading = true;
+
+    this.requestApi.authorize(r.id, r.rowVersion).subscribe({
+      next: updated => {
+        this.requestsLoading = false;
+        this.patchRequestInList(updated);
+        this.toast.success('Request authorized.');
+      },
+      error: err => {
+        console.error(err);
+        this.requestsLoading = false;
+        this.toast.error('Failed to authorize request. Please try again.');
+      }
+    });
+  }
+
+  deauthorizeRequestRow(r: Request, event?: Event) {
+    event?.stopPropagation();
+    if (Number(r.status) !== RequestStatus.Authorised) return;
+
+    this.requestsLoading = true;
+
+    this.requestApi.deauthorize(r.id, r.rowVersion).subscribe({
+      next: updated => {
+        this.requestsLoading = false;
+        this.patchRequestInList(updated);
+        this.toast.success('Request deauthorized.');
+      },
+      error: err => {
+        console.error(err);
+        this.requestsLoading = false;
+        this.toast.error('Failed to deauthorize request. Please try again.');
+      }
+    });
+  }
+
+  private patchRequestInList(updated: Request | null | undefined) {
+    // Some backend actions may return an empty body (null) even though the request was updated.
+    // In that case, fall back to reloading the list instead of crashing the UI.
+    if (!updated || (updated as any).id == null) {
+      this.loadRequests();
+      return;
+    }
+
+    // Defensive: ensure there are no null items in the local list.
+    this.requests = (this.requests ?? []).filter((x): x is Request => !!x && (x as any).id != null);
+
+    const idx = this.requests.findIndex(x => x.id === updated.id);
+    if (idx >= 0) {
+      this.requests[idx] = updated;
+    } else {
+      this.requests = [updated, ...this.requests];
+    }
+
+    if (this.selectedRequest?.id === updated.id) {
+      this.selectedRequest = updated;
+    }
   }
 
   // -----------------------------
@@ -255,9 +348,6 @@ export class CompanyDashboardComponent implements OnInit {
 
         this.products = Array.from(existing.values()).sort((a, b) => a.id - b.id);
         this.productsLoading = false;
-
-        // Move to next page only when user requests "Load more"
-        // (we keep productSkip for loadMore() handler)
       },
       error: err => {
         console.error(err);
@@ -306,10 +396,10 @@ export class CompanyDashboardComponent implements OnInit {
       id: 0,
       companyId: this.company.id,
       name: '',
-      totalQuantity: 0,
+      serviceCount: 0,
       price: 0,
       term: null,
-      scheduleType: ScheduleType.None
+      scheduleType: { periodType: SchedulePeriodType.None, periodNumber: null }
     };
 
     this.openModal('productAdd', 'Add new product');
@@ -343,18 +433,18 @@ export class CompanyDashboardComponent implements OnInit {
 
   onProductEdit() {
     if (!this.selectedProduct) return;
-    this.openProductEdit(this.selectedProduct.id, 'productEdit');
+    this.openProductEdit(this.selectedProduct.id);
   }
 
-  private openProductEdit(prodId: number, mode: 'productEdit' | 'productEditFromRequest') {
-    this.openModal(mode, 'Edit product');
+  private openProductEdit(prodId: number) {
+    this.openModal('productEdit', 'Edit product');
     this.modalLoading = true;
 
     this.productApi.getById(prodId).subscribe({
       next: prod => {
-        // Normalize term (null when missing)
         const term = prod.term === undefined ? null : prod.term;
-        this.productForm = { ...prod, term: term as any };
+        const scheduleType = prod.scheduleType ?? { periodType: SchedulePeriodType.None, periodNumber: null };
+        this.productForm = { ...prod, term: term as any, scheduleType };
         this.modalLoading = false;
       },
       error: err => {
@@ -400,7 +490,7 @@ export class CompanyDashboardComponent implements OnInit {
     const prodId = this.selectedProduct.id;
     const confirmed = await this.dialog.confirm({
       title: 'Delete Product',
-      message: `Are you sure you want to delete product #${prodId}?`,
+      message: `Are you sure you want to delete product #${prodId}? This action cannot be undone.`,
       confirmText: 'Delete',
       type: 'danger'
     });
@@ -456,33 +546,37 @@ export class CompanyDashboardComponent implements OnInit {
     switch (status) {
       case RequestStatus.None:
         return 'None';
-      case RequestStatus.Registered:
-        return 'Registered';
-      case RequestStatus.Authorized:
-        return 'Authorized';
+      case RequestStatus.Created:
+        return 'Created';
+      case RequestStatus.Authorised:
+        return 'Authorised';
       case RequestStatus.Approved:
         return 'Approved';
-      case RequestStatus.Rejected:
-        return 'Rejected';
       default:
         return `Status ${status}`;
     }
   }
 
-  scheduleTypeLabel(value: number): string {
+  scheduleTypeLabel(periodType: number, periodNumber?: number | null): string {
+    const label = this.schedulePeriodLabel(periodType);
+    if (!periodNumber || periodNumber <= 0) return label;
+    return `${label} / ${periodNumber}`;
+  }
+
+  schedulePeriodLabel(value: number): string {
     switch (value) {
-      case ScheduleType.None:
+      case SchedulePeriodType.None:
         return 'None';
-      case ScheduleType.Monthly:
+      case SchedulePeriodType.Daily:
+        return 'Daily';
+      case SchedulePeriodType.Weekly:
+        return 'Weekly';
+      case SchedulePeriodType.Monthly:
         return 'Monthly';
-      case ScheduleType.Quarterly:
-        return 'Quarterly';
-      case ScheduleType.SemiAnnual:
-        return 'Semi-Annual';
-      case ScheduleType.Annual:
-        return 'Annual';
+      case SchedulePeriodType.Yearly:
+        return 'Yearly';
       default:
-        return `Type ${value}`;
+        return `Period ${value}`;
     }
   }
 }

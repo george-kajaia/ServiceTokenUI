@@ -2,32 +2,17 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { CompanyApiService } from '../../../core/api/company-api.service';
+
 import { InvestorStateService } from '../../../core/state/investor-state.service';
-import { Company } from '../../../shared/models/company.model';
-import { environment } from '../../../../environments/environment';
+import { CompanyApiService } from '../../../core/api/company-api.service';
+import { ServiceTokenApiService } from '../../../core/api/service-token-api.service';
 import { ToastService } from '../../../core/services/toast.service';
 
-interface Bond {
-  id: string;
-  rowVersion: string;
-  companyId: number;
-  bondRequestId: number;
-  status: number;
-  startDate?: string | null;
-  endDate?: string | null;
-  price: number;
-  interestRate: number;
-  ownerType: number;
-  ownerPublicKey: string;
-}
+import { Company } from '../../../shared/models/company.model';
+import { ScheduleType } from '../../../shared/models/product.model';
+import { ServiceTokenDto, ServiceTokenStatus } from '../../../shared/models/service-token.model';
 
-interface BondDto extends Bond {
-  companyName: string;
-}
-
-type TabKey = 'yourBonds' | 'companiesBonds' | 'secondaryMarket';
+type MarketplaceTab = 'yourTokens' | 'primaryMarket' | 'secondaryMarket';
 
 @Component({
   selector: 'app-investor-marketplace',
@@ -37,254 +22,245 @@ type TabKey = 'yourBonds' | 'companiesBonds' | 'secondaryMarket';
   styleUrls: ['./investor-marketplace.component.scss']
 })
 export class InvestorMarketplaceComponent implements OnInit {
-  activeTab: TabKey = 'yourBonds';
+  activeTab: MarketplaceTab = 'yourTokens';
 
-  investorPublicKey: string | null = null;
+  investorPublicKey = '';
 
-  investorName: string | null = null;
-
-  // Your Bonds (tab 1)
-  yourBonds: BondDto[] = [];
-  yourBondsLoading = false;
-
-  // Companies Bonds (tab 2)
   companies: Company[] = [];
-  companiesLoading = false;
-  selectedCompanyId: number | null = null;
-  primaryBonds: BondDto[] = [];
-  primaryBondsLoading = false;
 
-  // Secondary Market (tab 3)
-  secondaryBonds: BondDto[] = [];
-  secondaryBondsLoading = false;
+  // Filters for market tabs
+  marketCompanyId: number = -1;
+  marketRequestId: number = -1;
+
+  // Data
+  yourTokens: ServiceTokenDto[] = [];
+  primaryMarketTokens: ServiceTokenDto[] = [];
+  secondaryMarketTokens: ServiceTokenDto[] = [];
+
+  loading = false;
 
   private toast = inject(ToastService);
 
-  // UI state for actions
-  markingResellId: string | null = null;
-  buyingPrimaryId: string | null = null;
-  buyingSecondaryId: string | null = null;
-
-  private bondBaseUrl = `${environment.apiBaseUrl}/Bond`;
-
   constructor(
     private router: Router,
-    private companyApi: CompanyApiService,
     private investorState: InvestorStateService,
-    private http: HttpClient
+    private companyApi: CompanyApiService,
+    private serviceTokenApi: ServiceTokenApiService
   ) {}
 
   ngOnInit(): void {
     const investor = this.investorState.investor;
     if (!investor) {
-      // If someone opens the page without login, redirect to login
       this.router.navigate(['/investor/login']);
       return;
     }
 
     this.investorPublicKey = investor.publicKey;
-    this.investorName = investor.userName;
 
-    // Load initial data for all tabs
-    this.loadYourBonds();
     this.loadCompanies();
-    this.loadSecondaryBonds();
+    this.loadYourTokens();
   }
 
-  setTab(tab: TabKey): void {
+  setTab(tab: MarketplaceTab) {
     this.activeTab = tab;
-  }
 
-  // --- Tab 1: Your Bonds ---
-
-  private loadYourBonds(): void {
-    if (!this.investorPublicKey) {
-      return;
+    if (tab === 'yourTokens') {
+      this.loadYourTokens();
+    } else if (tab === 'primaryMarket') {
+      this.loadPrimaryMarket();
+    } else {
+      this.loadSecondaryMarket();
     }
-
-    this.yourBondsLoading = true;
-
-    this.http
-      .get<BondDto[]>(`${this.bondBaseUrl}/GetInvestorBonds`, {
-        params: { investorPublicKey: this.investorPublicKey }
-      })
-      .subscribe({
-        next: bonds => {
-          this.yourBondsLoading = false;
-          this.yourBonds = bonds || [];
-        },
-        error: err => {
-          console.error(err);
-          this.yourBondsLoading = false;
-          this.toast.errorWithRetry(
-            'Failed to load your bonds. Please check your connection.',
-            () => this.loadYourBonds()
-          );
-        }
-      });
   }
 
-  markForResell(bond: BondDto): void {
-    this.markingResellId = bond.id;
-
-    this.http
-      .get<Bond>(`${this.bondBaseUrl}/MarkBondForResell`, {
-        params: { bondId: bond.id }
-      })
-      .subscribe({
-        next: _ => {
-          this.markingResellId = null;
-          this.toast.success('Bond marked for resell.');
-          // Refresh your bonds after marking for resell
-          this.loadYourBonds();
-        },
-        error: err => {
-          console.error(err);
-          this.markingResellId = null;
-          this.toast.error('Could not mark bond for resell. Please try again.');
-        }
-      });
+  loadCompanies() {
+    this.companyApi.getAll(0, 500, null).subscribe({
+      next: list => (this.companies = list ?? []),
+      error: err => {
+        console.error(err);
+        // non-blocking
+      }
+    });
   }
 
-  // --- Tab 2: Companies Bonds (Primary Market) ---
+  // -----------------------------
+  // Your tokens
+  // -----------------------------
+  loadYourTokens() {
+    this.loading = true;
 
-  private loadCompanies(): void {
-    this.companiesLoading = true;
-
-    this.companyApi.getAll().subscribe({
-      next: companies => {
-        this.companiesLoading = false;
-        this.companies = companies || [];
+    this.serviceTokenApi.getInvestorServiceTokens(this.investorPublicKey).subscribe({
+      next: list => {
+        this.yourTokens = list ?? [];
+        this.loading = false;
       },
       error: err => {
         console.error(err);
-        this.companiesLoading = false;
+        this.loading = false;
         this.toast.errorWithRetry(
-          'Failed to load companies. Please check your connection.',
-          () => this.loadCompanies()
+          'Failed to load your service tokens. Please check your connection.',
+          () => this.loadYourTokens()
         );
       }
     });
   }
 
-  onCompanyChange(): void {
-    this.primaryBonds = [];
+  markForResell(t: ServiceTokenDto) {
+    this.loading = true;
 
-    if (this.selectedCompanyId == null) {
-      return;
-    }
-
-    this.loadPrimaryBonds(this.selectedCompanyId);
+    this.serviceTokenApi.markServiceTokenForResell(t.id, t.rowVersion).subscribe({
+      next: _ => {
+        this.loading = false;
+        this.toast.success('Token marked for resell.');
+        this.loadYourTokens();
+      },
+      error: err => {
+        console.error(err);
+        this.loading = false;
+        this.toast.error('Failed to mark token for resell. Please try again.');
+      }
+    });
   }
 
-  private loadPrimaryBonds(companyId: number): void {
-    this.primaryBondsLoading = true;
+  cancelReselling(t: ServiceTokenDto) {
+    this.loading = true;
 
-    this.http
-      .get<BondDto[]>(`${this.bondBaseUrl}/GetPrimaryMarketBonds`, {
-        params: { companyId: companyId.toString() }
-      })
+    this.serviceTokenApi.cancelReselling(t.id, t.rowVersion).subscribe({
+      next: _ => {
+        this.loading = false;
+        this.toast.success('Reselling cancelled.');
+        this.loadYourTokens();
+      },
+      error: err => {
+        console.error(err);
+        this.loading = false;
+        this.toast.error('Failed to cancel reselling. Please try again.');
+      }
+    });
+  }
+
+  // -----------------------------
+  // Primary market
+  // -----------------------------
+  loadPrimaryMarket() {
+    this.loading = true;
+
+    this.serviceTokenApi.getPrimaryMarketServiceTokens(this.marketCompanyId, this.marketRequestId).subscribe({
+      next: list => {
+        this.primaryMarketTokens = list ?? [];
+        this.loading = false;
+      },
+      error: err => {
+        console.error(err);
+        this.loading = false;
+        this.toast.errorWithRetry(
+          'Failed to load primary market tokens. Please check your connection.',
+          () => this.loadPrimaryMarket()
+        );
+      }
+    });
+  }
+
+  buyPrimary(t: ServiceTokenDto) {
+    this.loading = true;
+
+    this.serviceTokenApi.buyPrimaryServiceToken(t.id, t.rowVersion, this.investorPublicKey).subscribe({
+      next: _ => {
+        this.loading = false;
+        this.toast.success('Token purchased successfully.');
+        // After buying: refresh both lists
+        this.loadYourTokens();
+        this.loadPrimaryMarket();
+      },
+      error: err => {
+        console.error(err);
+        this.loading = false;
+        this.toast.error('Failed to buy token. It may no longer be available.');
+      }
+    });
+  }
+
+  // -----------------------------
+  // Secondary market
+  // -----------------------------
+  loadSecondaryMarket() {
+    this.loading = true;
+
+    this.serviceTokenApi
+      .getSecondaryMarketServiceTokens(this.investorPublicKey, this.marketCompanyId, this.marketRequestId)
       .subscribe({
-        next: bonds => {
-          this.primaryBondsLoading = false;
-          this.primaryBonds = bonds || [];
+        next: list => {
+          this.secondaryMarketTokens = list ?? [];
+          this.loading = false;
         },
         error: err => {
           console.error(err);
-          this.primaryBondsLoading = false;
-          this.toast.error('Failed to load primary market bonds. Please try again.');
-        }
-      });
-  }
-
-  buyPrimary(bond: BondDto): void {
-    if (!this.investorPublicKey) {
-      return;
-    }
-
-    this.buyingPrimaryId = bond.id;
-
-    this.http
-      .get<Bond[]>(`${this.bondBaseUrl}/BuyPrimaryBond`, {
-        params: {
-          bondId: bond.id,
-          investorPublicKey: this.investorPublicKey
-        }
-      })
-      .subscribe({
-        next: _ => {
-          this.buyingPrimaryId = null;
-          this.toast.success('Bond purchased successfully.');
-          // Refresh your bonds and current company bonds
-          this.loadYourBonds();
-          if (this.selectedCompanyId != null) {
-            this.loadPrimaryBonds(this.selectedCompanyId);
-          }
-        },
-        error: err => {
-          console.error(err);
-          this.buyingPrimaryId = null;
-          this.toast.error('Could not complete purchase. The bond may no longer be available.');
-        }
-      });
-  }
-
-  // --- Tab 3: Secondary Market ---
-
-  private loadSecondaryBonds(): void {
-    if (!this.investorPublicKey) {
-      return;
-    }
-
-    this.secondaryBondsLoading = true;
-
-    this.http
-      .get<BondDto[]>(`${this.bondBaseUrl}/GetSecondaryMarketBonds`, {
-        params: { investorPublicKey: this.investorPublicKey }
-      })
-      .subscribe({
-        next: bonds => {
-          this.secondaryBondsLoading = false;
-          this.secondaryBonds = bonds || [];
-        },
-        error: err => {
-          console.error(err);
-          this.secondaryBondsLoading = false;
+          this.loading = false;
           this.toast.errorWithRetry(
-            'Failed to load secondary market bonds. Please check your connection.',
-            () => this.loadSecondaryBonds()
+            'Failed to load secondary market tokens. Please check your connection.',
+            () => this.loadSecondaryMarket()
           );
         }
       });
   }
 
-  buySecondary(bond: BondDto): void {
-    if (!this.investorPublicKey) {
-      return;
+  buySecondary(t: ServiceTokenDto) {
+    this.loading = true;
+
+    this.serviceTokenApi.buySecondaryServiceToken(t.id, t.rowVersion, this.investorPublicKey).subscribe({
+      next: _ => {
+        this.loading = false;
+        this.toast.success('Token purchased successfully.');
+        this.loadYourTokens();
+        this.loadSecondaryMarket();
+      },
+      error: err => {
+        console.error(err);
+        this.loading = false;
+        this.toast.error('Failed to buy token. It may no longer be available.');
+      }
+    });
+  }
+
+  // -----------------------------
+  // Display helpers
+  // -----------------------------
+  tokenStatusLabel(status: number): string {
+    switch (status) {
+      case ServiceTokenStatus.Available:
+        return 'Available';
+      case ServiceTokenStatus.Sold:
+        return 'Sold';
+      case ServiceTokenStatus.Finished:
+        return 'Finished';
+      default:
+        return `Status ${status}`;
     }
+  }
 
-    this.buyingSecondaryId = bond.id;
+  scheduleTypeLabel(st: ScheduleType): string {
+    if (!st) return '-';
 
-    this.http
-      .get<Bond>(`${this.bondBaseUrl}/BuySecondaryBond`, {
-        params: {
-          bondId: bond.id,
-          newInvestorPublicKey: this.investorPublicKey
-        }
-      })
-      .subscribe({
-        next: _ => {
-          this.buyingSecondaryId = null;
-          this.toast.success('Bond purchased successfully.');
-          // Refresh your bonds and the secondary market
-          this.loadYourBonds();
-          this.loadSecondaryBonds();
-        },
-        error: err => {
-          console.error(err);
-          this.buyingSecondaryId = null;
-          this.toast.error('Could not complete purchase. The bond may no longer be available.');
-        }
-      });
+    const base = this.schedulePeriodLabel(st.periodType);
+    const n = st.periodNumber;
+    if (!n || n <= 0) return base;
+    return `${base} / ${n}`;
+  }
+
+  private schedulePeriodLabel(value: number): string {
+    switch (value) {
+      case 0:
+        return 'None';
+      case 1:
+        return 'Daily';
+      case 2:
+        return 'Weekly';
+      case 3:
+        return 'Monthly';
+      case 4:
+        return 'Yearly';
+      default:
+        return `Period ${value}`;
+    }
   }
 }

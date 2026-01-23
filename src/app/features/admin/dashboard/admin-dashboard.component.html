@@ -1,34 +1,37 @@
-<div class="admin-container">
+<div class="dashboard-container">
   <h2>Admin Dashboard</h2>
 
   <div class="tabs">
-    <button
-      [class.active]="activeTab === 'companies'"
-      (click)="setTab('companies')"
-    >
+    <button class="tab" [class.active]="activeTab === 'companies'" (click)="setTab('companies')">
       Companies
     </button>
-    <button
-      [class.active]="activeTab === 'BondRequests'"
-      (click)="setTab('BondRequests')"
-    >
-      Bond Requests
+    <button class="tab" [class.active]="activeTab === 'requests'" (click)="setTab('requests')">
+      Requests
     </button>
   </div>
 
-  <!-- Companies Tab -->
-  <section *ngIf="activeTab === 'companies'" class="tab-content">
-    <h3>Companies</h3>
+  <div *ngIf="loading" class="info">Loading...</div>
+
+  <!-- Companies tab -->
+  <section *ngIf="activeTab === 'companies'" class="panel">
+    <div class="panel-header">
+      <h3>Companies</h3>
+      <div class="actions">
+        <button class="secondary" (click)="loadCompanies()">Refresh</button>
+      </div>
+    </div>
 
     <div class="filters">
       <label>
         Name
         <input type="text" [(ngModel)]="companyFilter.name" (ngModelChange)="applyCompanyFilter()" />
       </label>
+
       <label>
         Tax Code
         <input type="text" [(ngModel)]="companyFilter.taxCode" (ngModelChange)="applyCompanyFilter()" />
       </label>
+
       <label>
         Status
         <select [(ngModel)]="companyFilter.status" (ngModelChange)="applyCompanyFilter()">
@@ -37,97 +40,104 @@
           <option value="1">Active</option>
         </select>
       </label>
-      <button (click)="clearCompanyFilter()">Clear</button>
+
+      <button class="secondary" (click)="clearCompanyFilter()">Clear</button>
     </div>
 
-    <table *ngIf="filteredCompanies.length > 0" class="grid">
+    <table *ngIf="!loading && filteredCompanies.length > 0" class="grid">
       <thead>
         <tr>
           <th>Id</th>
+          <th>RowVersion</th>
           <th>Name</th>
           <th>Tax Code</th>
           <th>Status</th>
-          <th>RegDate</th>
-          <th>Approve</th>
+          <th>Reg Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let c of filteredCompanies">
           <td>{{ c.id }}</td>
+          <td>{{ c.rowVersion }}</td>
           <td>{{ c.name }}</td>
           <td>{{ c.taxCode }}</td>
           <td>{{ c.status === 1 ? 'Active' : 'Not Active' }}</td>
-          <td>{{ c.regDate | date }}</td>
+          <td>{{ c.regDate | date: 'medium' }}</td>
           <td>
-            <button (click)="approveCompany(c)" [disabled]="c.status === 1">
-              Activate
-            </button>
+            <button (click)="approveCompany(c)" [disabled]="c.status === 1">Approve</button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <p *ngIf="!filteredCompanies.length">No companies found.</p>
+    <div *ngIf="!loading && filteredCompanies.length === 0" class="muted">No companies found.</div>
   </section>
 
-  <!-- Bond Requests Tab -->
-  <section *ngIf="activeTab === 'BondRequests'" class="tab-content">
-    <h3>Bond Requests</h3>
+  <!-- Requests tab -->
+  <section *ngIf="activeTab === 'requests'" class="panel">
+    <div class="panel-header">
+      <h3>Requests</h3>
+      <div class="actions">
+        <button class="secondary" (click)="loadRequests()">Refresh</button>
+      </div>
+    </div>
 
     <div class="filters">
       <label>
         Company Id
-        <input type="text" [(ngModel)]="bondFilter.companyId" />
+        <input type="number" [(ngModel)]="requestFilter.companyId" (keyup.enter)="loadRequests()" />
       </label>
+
       <label>
         Status
-        <select [(ngModel)]="bondFilter.status" (ngModelChange)="applyBondFilter()">
+        <select [(ngModel)]="requestFilter.status" (ngModelChange)="loadRequests()">
           <option value="">All</option>
-          <option value="1">Not Active</option>
-          <option value="2">Active</option>
+          <option value="0">None</option>
+          <option value="1">Created</option>
+          <option value="2">Authorised</option>
+          <option value="3">Approved</option>
         </select>
       </label>
-      <button (click)="loadBondRequests()">Load</button>
-      <button (click)="clearBondFilter()">Clear Status Filter</button>
+
+      <button class="secondary" (click)="clearRequestFilter()">Clear status</button>
     </div>
 
-    <table *ngIf="filteredBondRequests.length > 0" class="grid">
+    <table *ngIf="!loading && filteredRequests.length > 0" class="grid">
       <thead>
         <tr>
           <th>Id</th>
-          <th>CompanyId</th>
-          <th>RegDate</th>
+          <th>RowVersion</th>
+          <th>Company</th>
+          <th>Prod</th>
+          <th>ServiceTokenCount</th>
+          <th>Reg Date</th>
           <th>Status</th>
-          <th>TotalCount</th>
-          <th>Price</th>
-          <th>Term</th>
-          <th>InterestRate</th>
-          <th>RealizationPeriodNumber</th>
-          <th>Approve</th>
+          <th>Authorize Date</th>
+          <th>Approve Date</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let tr of filteredBondRequests">
-          <td>{{ tr.id }}</td>
-          <td>{{ tr.companyId }}</td>
-          <td>{{ tr.regDate | date }}</td>
-          <td>{{ tr.type }}</td>
-          <td>{{ tr.status }}</td>
-          <td>{{ tr.totalCount }}</td>
-          <td>{{ tr.price }}</td>
-          <td>{{ tr.term }}</td>
-          <td>{{ tr.interestRate }}</td>
-          <td>{{ tr.realizationPeriodNumber }}</td>
-          <td>
-            <button (click)="approveBondRequest(tr)" [disabled]="tr.status === 2">
-              Activate
-            </button>
+        <tr *ngFor="let r of filteredRequests">
+          <td>{{ r.id }}</td>
+          <td>{{ r.rowVersion }}</td>
+          <td>{{ r.companyId }}</td>
+          <td>{{ r.prodId }}</td>
+          <td>{{ r.serviceTokenCount }}</td>
+          <td>{{ r.regDate | date: 'medium' }}</td>
+          <td>{{ requestStatusLabel(r.status) }}</td>
+          <td>{{ r.authorizeDate ? (r.authorizeDate | date: 'medium') : '-' }}</td>
+          <td>{{ r.approveDate ? (r.approveDate | date: 'medium') : '-' }}</td>
+          <td class="action-col">
+            <!-- NOTE: Avoid using global Number() in templates; Angular resolves identifiers against the component context. -->
+            <button (click)="approveRequest(r)" [disabled]="(+r.status) !== 2">Approve</button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <p *ngIf="!filteredBondRequests.length">No bond requests loaded.</p>
+    <div *ngIf="!loading && filteredRequests.length === 0" class="muted">No requests found.</div>
   </section>
 
   <a routerLink="/" class="back-link">Back to main page</a>

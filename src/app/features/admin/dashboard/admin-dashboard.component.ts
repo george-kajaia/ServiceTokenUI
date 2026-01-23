@@ -2,11 +2,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+
 import { AdminStateService } from '../../../core/state/admin-state.service';
 import { CompanyApiService } from '../../../core/api/company-api.service';
-import { BondRequestApiService } from '../../../core/api/bond-request-api.service';
-import { Company, BondRequest } from '../../../shared/models/company.model';
+import { RequestApiService } from '../../../core/api/request-api.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { DialogService } from '../../../core/services/dialog.service';
+
+import { Company } from '../../../shared/models/company.model';
+import { Request, RequestStatus } from '../../../shared/models/request.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -16,7 +20,7 @@ import { ToastService } from '../../../core/services/toast.service';
   styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent implements OnInit {
-  activeTab: 'companies' | 'BondRequests' = 'companies';
+  activeTab: 'companies' | 'requests' = 'companies';
 
   companies: Company[] = [];
   filteredCompanies: Company[] = [];
@@ -26,20 +30,23 @@ export class AdminDashboardComponent implements OnInit {
     status: '' as '' | '0' | '1'
   };
 
-  BondRequests: BondRequest[] = [];
-  filteredBondRequests: BondRequest[] = [];
-  bondFilter = {
+  requests: Request[] = [];
+  filteredRequests: Request[] = [];
+  requestFilter = {
     companyId: '',
-    status: '' as '' | '1' | '2'
+    status: '' as '' | '0' | '1' | '2' | '3'
   };
 
+  loading = false;
+
   private toast = inject(ToastService);
+  private dialog = inject(DialogService);
 
   constructor(
     private adminState: AdminStateService,
     private router: Router,
     private companyApi: CompanyApiService,
-    private BondRequestApi: BondRequestApiService
+    private requestApi: RequestApiService
   ) {}
 
   ngOnInit(): void {
@@ -47,25 +54,35 @@ export class AdminDashboardComponent implements OnInit {
       this.router.navigate(['/admin/login']);
       return;
     }
+
     this.loadCompanies();
   }
 
-  setTab(tab: 'companies' | 'BondRequests') {
+  setTab(tab: 'companies' | 'requests') {
     this.activeTab = tab;
+
     if (tab === 'companies') {
       this.loadCompanies();
+    } else {
+      this.loadRequests();
     }
   }
 
-  // Companies tab
+  // -----------------------------
+  // Companies
+  // -----------------------------
   loadCompanies() {
-    this.companyApi.getAll().subscribe({
+    this.loading = true;
+
+    this.companyApi.getAll(0, 500, null).subscribe({
       next: list => {
-        this.companies = list;
+        this.companies = list ?? [];
+        this.loading = false;
         this.applyCompanyFilter();
       },
       error: err => {
         console.error(err);
+        this.loading = false;
         this.toast.errorWithRetry(
           'Failed to load companies. Please check your connection.',
           () => this.loadCompanies()
@@ -76,14 +93,9 @@ export class AdminDashboardComponent implements OnInit {
 
   applyCompanyFilter() {
     this.filteredCompanies = this.companies.filter(c => {
-      const matchesName =
-        !this.companyFilter.name ||
-        c.name.toLowerCase().includes(this.companyFilter.name.toLowerCase());
-      const matchesTax =
-        !this.companyFilter.taxCode ||
-        c.taxCode.toLowerCase().includes(this.companyFilter.taxCode.toLowerCase());
-      const matchesStatus =
-        !this.companyFilter.status || c.status === Number(this.companyFilter.status);
+      const matchesName = !this.companyFilter.name || c.name.toLowerCase().includes(this.companyFilter.name.toLowerCase());
+      const matchesTax = !this.companyFilter.taxCode || c.taxCode.toLowerCase().includes(this.companyFilter.taxCode.toLowerCase());
+      const matchesStatus = !this.companyFilter.status || c.status === Number(this.companyFilter.status);
       return matchesName && matchesTax && matchesStatus;
     });
   }
@@ -94,11 +106,10 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   approveCompany(company: Company) {
-    this.companyApi.approveCompany(company.id).subscribe({
-      next: updated => {
-        company.status = updated.status;
-        this.applyCompanyFilter();
+    this.companyApi.approveCompany(company.id, company.rowVersion).subscribe({
+      next: _ => {
         this.toast.success('Company approved successfully.');
+        this.loadCompanies();
       },
       error: err => {
         console.error(err);
@@ -107,62 +118,127 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // bond Requests tab
-  loadBondRequests() {
-    this.BondRequests = [];
-    this.filteredBondRequests = [];
-    
+  // -----------------------------
+  // Requests
+  // -----------------------------
+  loadRequests() {
+    this.loading = true;
+
     let cid = -1;
-    if ( this.bondFilter.companyId != '' && this.bondFilter.companyId != null)
-    {
-      cid = Number(this.bondFilter.companyId);
-    } 
-    
-    let status = 0;
-    if(this.bondFilter.status != '' && this.bondFilter.status != null)
-    {
-      status = Number(this.bondFilter.status);
+    if (this.requestFilter.companyId) {
+      const parsed = Number(this.requestFilter.companyId);
+      if (!Number.isNaN(parsed)) cid = parsed;
     }
 
-    this.BondRequestApi.Get(cid, status).subscribe({
+    let status = 0;
+    if (this.requestFilter.status) {
+      const parsed = Number(this.requestFilter.status);
+      if (!Number.isNaN(parsed)) status = parsed;
+    }
+
+    this.requestApi.getAll(cid, status).subscribe({
       next: list => {
-        this.BondRequests = list;
-        this.applyBondFilter();
+        this.requests = list ?? [];
+        this.loading = false;
+        this.applyRequestFilter();
       },
       error: err => {
         console.error(err);
+        this.loading = false;
         this.toast.errorWithRetry(
-          'Failed to load bond requests. Please check your connection.',
-          () => this.loadBondRequests()
+          'Failed to load requests. Please check your connection.',
+          () => this.loadRequests()
         );
       }
     });
   }
 
-  applyBondFilter() {
-    this.filteredBondRequests = this.BondRequests.filter(t => {
-      const matchesStatus =
-        !this.bondFilter.status || t.status === Number(this.bondFilter.status);
+  applyRequestFilter() {
+    this.filteredRequests = this.requests.filter(r => {
+      const matchesStatus = !this.requestFilter.status || Number(r.status) === Number(this.requestFilter.status);
       return matchesStatus;
     });
   }
 
-  clearbondFilter() {
-    this.bondFilter.status = '';
-    this.applyBondFilter();
+  clearRequestFilter() {
+    this.requestFilter.status = '';
+    this.applyRequestFilter();
   }
 
-  approveBondRequest(tr: BondRequest) {
-    this.BondRequestApi.approve(tr.id).subscribe({
-      next: updated => {
-        tr.status = updated.status;
-        this.applyBondFilter();
-        this.toast.success('Bond request approved successfully.');
+  authorizeRequest(r: Request) {
+    this.requestApi.authorize(r.id, r.rowVersion).subscribe({
+      next: _ => {
+        this.toast.success('Request authorized successfully.');
+        this.loadRequests();
       },
       error: err => {
         console.error(err);
-        this.toast.error('Could not approve bond request. Please try again.');
+        this.toast.error('Failed to authorize request. Please try again.');
       }
     });
+  }
+
+  deauthorizeRequest(r: Request) {
+    this.requestApi.deauthorize(r.id, r.rowVersion).subscribe({
+      next: _ => {
+        this.toast.success('Request deauthorized.');
+        this.loadRequests();
+      },
+      error: err => {
+        console.error(err);
+        this.toast.error('Failed to deauthorize request. Please try again.');
+      }
+    });
+  }
+
+  approveRequest(r: Request) {
+    this.requestApi.approve(r.id, r.rowVersion).subscribe({
+      next: _ => {
+        this.toast.success('Request approved successfully.');
+        this.loadRequests();
+      },
+      error: err => {
+        console.error(err);
+        this.toast.error('Failed to approve request. Please try again.');
+      }
+    });
+  }
+
+  async deleteRequest(r: Request) {
+    const confirmed = await this.dialog.confirm({
+      title: 'Delete Request',
+      message: `Are you sure you want to delete request #${r.id}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (!confirmed) return;
+
+    this.requestApi.delete(r.id, r.rowVersion).subscribe({
+      next: _ => {
+        this.toast.success('Request deleted.');
+        this.loadRequests();
+      },
+      error: err => {
+        console.error(err);
+        this.toast.error('Failed to delete request. Please try again.');
+      }
+    });
+  }
+
+  requestStatusLabel(status: number): string {
+    switch (status) {
+      case RequestStatus.None:
+        return 'None';
+      case RequestStatus.Created:
+        return 'Created';
+      case RequestStatus.Authorised:
+        return 'Authorised';
+      case RequestStatus.Approved:
+        return 'Approved';
+      default:
+        return `Status ${status}`;
+    }
   }
 }

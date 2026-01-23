@@ -1,18 +1,18 @@
 export enum RequestStatus {
   None = 0,
-  Registered = 1,
-  Authorized = 2,
-  Approved = 3,
-  Rejected = 4
+  Created = 1,
+  Authorised = 2,
+  Approved = 3
 }
 
 export interface Request {
   id: number;
-  rowVersion: string;
+  rowVersion: number;
   companyId: number;
   prodId: number;
+  serviceTokenCount: number;
   regDate: string;
-  status: number;
+  status: RequestStatus | number;
   authorizeDate?: string | null;
   approveDate?: string | null;
 }
