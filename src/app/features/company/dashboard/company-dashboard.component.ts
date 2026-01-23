@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { CompanyStateService } from '../../../core/state/company-state.service';
 import { RequestApiService } from '../../../core/api/request-api.service';
 import { ProductApiService } from '../../../core/api/product-api.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { DialogService } from '../../../core/services/dialog.service';
 
 import { Company } from '../../../shared/models/company.model';
 import { Request, RequestStatus } from '../../../shared/models/request.model';
@@ -37,13 +39,11 @@ export class CompanyDashboardComponent implements OnInit {
   // Requests tab state
   requests: Request[] = [];
   requestsLoading = false;
-  requestsError = '';
   selectedRequest: Request | null = null;
 
   // Products tab state
   products: Product[] = [];
   productsLoading = false;
-  productsError = '';
   selectedProduct: Product | null = null;
 
   // Products query state (API does not expose CompanyId filter; we filter client-side)
@@ -75,6 +75,9 @@ export class CompanyDashboardComponent implements OnInit {
     scheduleType: ScheduleType.None
   };
 
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
+
   constructor(
     private router: Router,
     private companyState: CompanyStateService,
@@ -105,7 +108,6 @@ export class CompanyDashboardComponent implements OnInit {
     if (!this.company) return;
 
     this.requestsLoading = true;
-    this.requestsError = '';
     this.selectedRequest = null;
 
     this.requestApi.getAll(this.company.id, RequestStatus.None).subscribe({
@@ -116,7 +118,7 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.requestsError = 'Failed to load requests.';
+        this.toast.error('Failed to load requests.');
       }
     });
   }
@@ -139,7 +141,8 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to load request details.';
+        this.closeModal();
+        this.toast.error('Failed to load request details.');
       }
     });
   }
@@ -173,11 +176,12 @@ export class CompanyDashboardComponent implements OnInit {
         this.modalLoading = false;
         this.closeModal();
         this.loadRequests();
+        this.toast.success('Request created successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to create request.';
+        this.toast.error('Failed to create request.');
       }
     });
   }
@@ -188,15 +192,20 @@ export class CompanyDashboardComponent implements OnInit {
     this.openProductEdit(this.selectedRequest.prodId, 'productEditFromRequest');
   }
 
-  onRequestDelete() {
+  async onRequestDelete() {
     // Per provided backend signatures, Request "Delete" uses Product.Delete with the request's ProdId
     if (!this.selectedRequest) return;
 
     const prodId = this.selectedRequest.prodId;
-    if (!confirm(`Delete product #${prodId} (from selected request)?`)) return;
+    const confirmed = await this.dialog.confirm({
+      title: 'Delete Product',
+      message: `Are you sure you want to delete product #${prodId} from this request?`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+    if (!confirmed) return;
 
     this.productsLoading = true;
-    this.productsError = '';
 
     this.productApi.delete(prodId).subscribe({
       next: _ => {
@@ -204,11 +213,12 @@ export class CompanyDashboardComponent implements OnInit {
         this.selectedRequest = null;
         this.reloadProducts();
         this.loadRequests();
+        this.toast.success('Product deleted successfully.');
       },
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.productsError = 'Failed to delete product.';
+        this.toast.error('Failed to delete product.');
       }
     });
   }
@@ -230,7 +240,6 @@ export class CompanyDashboardComponent implements OnInit {
 
     if (resetSelection) this.selectedProduct = null;
     this.productsLoading = true;
-    this.productsError = '';
 
     this.productApi.getAll(this.productSkip, this.productTake, this.productSearch || null).subscribe({
       next: data => {
@@ -250,7 +259,7 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.productsError = 'Failed to load products.';
+        this.toast.error('Failed to load products.');
       }
     });
   }
@@ -278,7 +287,8 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to load product details.';
+        this.closeModal();
+        this.toast.error('Failed to load product details.');
       }
     });
   }
@@ -315,11 +325,12 @@ export class CompanyDashboardComponent implements OnInit {
         this.modalLoading = false;
         this.closeModal();
         this.reloadProducts();
+        this.toast.success('Product created successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to create product.';
+        this.toast.error('Failed to create product.');
       }
     });
   }
@@ -343,7 +354,8 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to load product.';
+        this.closeModal();
+        this.toast.error('Failed to load product.');
       }
     });
   }
@@ -366,23 +378,29 @@ export class CompanyDashboardComponent implements OnInit {
         this.reloadProducts();
         // If edit was invoked from Requests tab, refresh Requests as well (prodId referenced there)
         this.loadRequests();
+        this.toast.success('Product updated successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to update product.';
+        this.toast.error('Failed to update product.');
       }
     });
   }
 
-  onProductDelete() {
+  async onProductDelete() {
     if (!this.selectedProduct) return;
 
     const prodId = this.selectedProduct.id;
-    if (!confirm(`Delete product #${prodId}?`)) return;
+    const confirmed = await this.dialog.confirm({
+      title: 'Delete Product',
+      message: `Are you sure you want to delete product #${prodId}?`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+    if (!confirmed) return;
 
     this.productsLoading = true;
-    this.productsError = '';
 
     this.productApi.delete(prodId).subscribe({
       next: _ => {
@@ -390,11 +408,12 @@ export class CompanyDashboardComponent implements OnInit {
         this.selectedProduct = null;
         this.reloadProducts();
         this.loadRequests();
+        this.toast.success('Product deleted successfully.');
       },
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.productsError = 'Failed to delete product.';
+        this.toast.error('Failed to delete product.');
       }
     });
   }

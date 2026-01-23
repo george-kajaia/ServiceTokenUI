@@ -40,7 +40,6 @@
     </div>
 
     <div *ngIf="requestsLoading" class="info">Loading requests...</div>
-    <div *ngIf="requestsError" class="error">{{ requestsError }}</div>
 
     <table *ngIf="!requestsLoading && requests.length > 0" class="grid">
       <thead>
@@ -102,7 +101,6 @@
     </div>
 
     <div *ngIf="productsLoading" class="info">Loading products...</div>
-    <div *ngIf="productsError" class="error">{{ productsError }}</div>
 
     <table *ngIf="!productsLoading && products.length > 0" class="grid">
       <thead>

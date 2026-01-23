@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +6,7 @@ import { AdminStateService } from '../../../core/state/admin-state.service';
 import { CompanyApiService } from '../../../core/api/company-api.service';
 import { BondRequestApiService } from '../../../core/api/bond-request-api.service';
 import { Company, BondRequest } from '../../../shared/models/company.model';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -32,7 +33,7 @@ export class AdminDashboardComponent implements OnInit {
     status: '' as '' | '1' | '2'
   };
 
-  error = '';
+  private toast = inject(ToastService);
 
   constructor(
     private adminState: AdminStateService,
@@ -65,7 +66,7 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.error = 'Failed to load companies.';
+        this.toast.error('Failed to load companies.');
       }
     });
   }
@@ -94,10 +95,11 @@ export class AdminDashboardComponent implements OnInit {
       next: updated => {
         company.status = updated.status;
         this.applyCompanyFilter();
+        this.toast.success('Company approved successfully.');
       },
       error: err => {
         console.error(err);
-        this.error = 'Failed to approve company.';
+        this.toast.error('Failed to approve company.');
       }
     });
   }
@@ -106,7 +108,6 @@ export class AdminDashboardComponent implements OnInit {
   loadBondRequests() {
     this.BondRequests = [];
     this.filteredBondRequests = [];
-    this.error = '';
     
     let cid = -1;
     if ( this.bondFilter.companyId != '' && this.bondFilter.companyId != null)
@@ -127,7 +128,7 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.error = 'Failed to load bond requests.';
+        this.toast.error('Failed to load bond requests.');
       }
     });
   }
@@ -150,10 +151,11 @@ export class AdminDashboardComponent implements OnInit {
       next: updated => {
         tr.status = updated.status;
         this.applyBondFilter();
+        this.toast.success('Bond request approved successfully.');
       },
       error: err => {
         console.error(err);
-        this.error = 'Failed to approve bond request.';
+        this.toast.error('Failed to approve bond request.');
       }
     });
   }

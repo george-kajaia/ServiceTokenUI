@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import { CompanyApiService } from '../../../core/api/company-api.service';
 import { InvestorStateService } from '../../../core/state/investor-state.service';
 import { Company } from '../../../shared/models/company.model';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '../../../core/services/toast.service';
 
 interface Bond {
   id: string;
@@ -45,22 +46,19 @@ export class InvestorMarketplaceComponent implements OnInit {
   // Your Bonds (tab 1)
   yourBonds: BondDto[] = [];
   yourBondsLoading = false;
-  yourBondsError = '';
-  yourBondsInfo = '';
 
   // Companies Bonds (tab 2)
   companies: Company[] = [];
   companiesLoading = false;
-  companiesError = '';
   selectedCompanyId: number | null = null;
   primaryBonds: BondDto[] = [];
   primaryBondsLoading = false;
-  primaryBondsError = '';
 
   // Secondary Market (tab 3)
   secondaryBonds: BondDto[] = [];
   secondaryBondsLoading = false;
-  secondaryBondsError = '';
+
+  private toast = inject(ToastService);
 
   // UI state for actions
   markingResellId: string | null = null;
@@ -105,8 +103,6 @@ export class InvestorMarketplaceComponent implements OnInit {
     }
 
     this.yourBondsLoading = true;
-    this.yourBondsError = '';
-    this.yourBondsInfo = '';
 
     this.http
       .get<BondDto[]>(`${this.bondBaseUrl}/GetInvestorBonds`, {
@@ -116,21 +112,17 @@ export class InvestorMarketplaceComponent implements OnInit {
         next: bonds => {
           this.yourBondsLoading = false;
           this.yourBonds = bonds || [];
-          if (!bonds || bonds.length === 0) {
-            this.yourBondsInfo = 'You do not have any bonds yet.';
-          }
         },
         error: err => {
           console.error(err);
           this.yourBondsLoading = false;
-          this.yourBondsError = 'Failed to load your bonds.';
+          this.toast.error('Failed to load your bonds.');
         }
       });
   }
 
   markForResell(bond: BondDto): void {
     this.markingResellId = bond.id;
-    this.yourBondsError = '';
 
     this.http
       .get<Bond>(`${this.bondBaseUrl}/MarkBondForResell`, {
@@ -139,13 +131,14 @@ export class InvestorMarketplaceComponent implements OnInit {
       .subscribe({
         next: _ => {
           this.markingResellId = null;
+          this.toast.success('Bond marked for resell.');
           // Refresh your bonds after marking for resell
           this.loadYourBonds();
         },
         error: err => {
           console.error(err);
           this.markingResellId = null;
-          this.yourBondsError = 'Failed to mark bond for resell.';
+          this.toast.error('Failed to mark bond for resell.');
         }
       });
   }
@@ -154,7 +147,6 @@ export class InvestorMarketplaceComponent implements OnInit {
 
   private loadCompanies(): void {
     this.companiesLoading = true;
-    this.companiesError = '';
 
     this.companyApi.getAll().subscribe({
       next: companies => {
@@ -164,14 +156,13 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.companiesLoading = false;
-        this.companiesError = 'Failed to load companies.';
+        this.toast.error('Failed to load companies.');
       }
     });
   }
 
   onCompanyChange(): void {
     this.primaryBonds = [];
-    this.primaryBondsError = '';
 
     if (this.selectedCompanyId == null) {
       return;
@@ -182,7 +173,6 @@ export class InvestorMarketplaceComponent implements OnInit {
 
   private loadPrimaryBonds(companyId: number): void {
     this.primaryBondsLoading = true;
-    this.primaryBondsError = '';
 
     this.http
       .get<BondDto[]>(`${this.bondBaseUrl}/GetPrimaryMarketBonds`, {
@@ -196,7 +186,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.primaryBondsLoading = false;
-          this.primaryBondsError = 'Failed to load primary market bonds.';
+          this.toast.error('Failed to load primary market bonds.');
         }
       });
   }
@@ -207,7 +197,6 @@ export class InvestorMarketplaceComponent implements OnInit {
     }
 
     this.buyingPrimaryId = bond.id;
-    this.primaryBondsError = '';
 
     this.http
       .get<Bond[]>(`${this.bondBaseUrl}/BuyPrimaryBond`, {
@@ -219,6 +208,7 @@ export class InvestorMarketplaceComponent implements OnInit {
       .subscribe({
         next: _ => {
           this.buyingPrimaryId = null;
+          this.toast.success('Bond purchased successfully.');
           // Refresh your bonds and current company bonds
           this.loadYourBonds();
           if (this.selectedCompanyId != null) {
@@ -228,7 +218,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.buyingPrimaryId = null;
-          this.primaryBondsError = 'Failed to buy bond.';
+          this.toast.error('Failed to buy bond.');
         }
       });
   }
@@ -241,7 +231,6 @@ export class InvestorMarketplaceComponent implements OnInit {
     }
 
     this.secondaryBondsLoading = true;
-    this.secondaryBondsError = '';
 
     this.http
       .get<BondDto[]>(`${this.bondBaseUrl}/GetSecondaryMarketBonds`, {
@@ -255,7 +244,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.secondaryBondsLoading = false;
-          this.secondaryBondsError = 'Failed to load secondary market bonds.';
+          this.toast.error('Failed to load secondary market bonds.');
         }
       });
   }
@@ -266,7 +255,6 @@ export class InvestorMarketplaceComponent implements OnInit {
     }
 
     this.buyingSecondaryId = bond.id;
-    this.secondaryBondsError = '';
 
     this.http
       .get<Bond>(`${this.bondBaseUrl}/BuySecondaryBond`, {
@@ -278,6 +266,7 @@ export class InvestorMarketplaceComponent implements OnInit {
       .subscribe({
         next: _ => {
           this.buyingSecondaryId = null;
+          this.toast.success('Bond purchased successfully.');
           // Refresh your bonds and the secondary market
           this.loadYourBonds();
           this.loadSecondaryBonds();
@@ -285,7 +274,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.buyingSecondaryId = null;
-          this.secondaryBondsError = 'Failed to buy bond.';
+          this.toast.error('Failed to buy bond.');
         }
       });
   }
