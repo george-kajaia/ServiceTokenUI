@@ -71,7 +71,7 @@ export class AdminDashboardComponent implements OnInit {
   // -----------------------------
   // Companies
   // -----------------------------
-  loadCompanies() {
+  loadCompanies(silent = false) {
     this.loading = true;
 
     this.companyApi.getAll(0, 500, null).subscribe({
@@ -83,10 +83,12 @@ export class AdminDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.errorWithRetry(
-          'Failed to load companies. Please check your connection.',
-          () => this.loadCompanies()
-        );
+        if (!silent) {
+          this.toast.errorWithRetry(
+            'Failed to load companies. Please check your connection.',
+            () => this.loadCompanies()
+          );
+        }
       }
     });
   }
@@ -109,7 +111,7 @@ export class AdminDashboardComponent implements OnInit {
     this.companyApi.approveCompany(company.id, company.rowVersion).subscribe({
       next: _ => {
         this.toast.success('Company approved successfully.');
-        this.loadCompanies();
+        this.loadCompanies(true);
       },
       error: err => {
         console.error(err);
@@ -121,7 +123,7 @@ export class AdminDashboardComponent implements OnInit {
   // -----------------------------
   // Requests
   // -----------------------------
-  loadRequests() {
+  loadRequests(silent = false) {
     this.loading = true;
 
     let cid = -1;
@@ -145,10 +147,12 @@ export class AdminDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.errorWithRetry(
-          'Failed to load requests. Please check your connection.',
-          () => this.loadRequests()
-        );
+        if (!silent) {
+          this.toast.errorWithRetry(
+            'Failed to load requests. Please check your connection.',
+            () => this.loadRequests()
+          );
+        }
       }
     });
   }
@@ -169,7 +173,7 @@ export class AdminDashboardComponent implements OnInit {
     this.requestApi.authorize(r.id, r.rowVersion).subscribe({
       next: _ => {
         this.toast.success('Request authorized successfully.');
-        this.loadRequests();
+        this.loadRequests(true);
       },
       error: err => {
         console.error(err);
@@ -182,7 +186,7 @@ export class AdminDashboardComponent implements OnInit {
     this.requestApi.deauthorize(r.id, r.rowVersion).subscribe({
       next: _ => {
         this.toast.success('Request deauthorized.');
-        this.loadRequests();
+        this.loadRequests(true);
       },
       error: err => {
         console.error(err);
@@ -195,7 +199,7 @@ export class AdminDashboardComponent implements OnInit {
     this.requestApi.approve(r.id, r.rowVersion).subscribe({
       next: _ => {
         this.toast.success('Request approved successfully.');
-        this.loadRequests();
+        this.loadRequests(true);
       },
       error: err => {
         console.error(err);
@@ -218,7 +222,7 @@ export class AdminDashboardComponent implements OnInit {
     this.requestApi.delete(r.id, r.rowVersion).subscribe({
       next: _ => {
         this.toast.success('Request deleted.');
-        this.loadRequests();
+        this.loadRequests(true);
       },
       error: err => {
         console.error(err);

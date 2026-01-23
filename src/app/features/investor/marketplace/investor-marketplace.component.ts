@@ -86,7 +86,7 @@ export class InvestorMarketplaceComponent implements OnInit {
   // -----------------------------
   // Your tokens
   // -----------------------------
-  loadYourTokens() {
+  loadYourTokens(silent = false) {
     this.loading = true;
 
     this.serviceTokenApi.getInvestorServiceTokens(this.investorPublicKey).subscribe({
@@ -97,10 +97,12 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.errorWithRetry(
-          'Failed to load your service tokens. Please check your connection.',
-          () => this.loadYourTokens()
-        );
+        if (!silent) {
+          this.toast.errorWithRetry(
+            'Failed to load your service tokens. Please check your connection.',
+            () => this.loadYourTokens()
+          );
+        }
       }
     });
   }
@@ -112,7 +114,7 @@ export class InvestorMarketplaceComponent implements OnInit {
       next: _ => {
         this.loading = false;
         this.toast.success('Token marked for resell.');
-        this.loadYourTokens();
+        this.loadYourTokens(true);
       },
       error: err => {
         console.error(err);
@@ -129,7 +131,7 @@ export class InvestorMarketplaceComponent implements OnInit {
       next: _ => {
         this.loading = false;
         this.toast.success('Reselling cancelled.');
-        this.loadYourTokens();
+        this.loadYourTokens(true);
       },
       error: err => {
         console.error(err);
@@ -142,7 +144,7 @@ export class InvestorMarketplaceComponent implements OnInit {
   // -----------------------------
   // Primary market
   // -----------------------------
-  loadPrimaryMarket() {
+  loadPrimaryMarket(silent = false) {
     this.loading = true;
 
     this.serviceTokenApi.getPrimaryMarketServiceTokens(this.marketCompanyId, this.marketRequestId).subscribe({
@@ -153,10 +155,12 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.errorWithRetry(
-          'Failed to load primary market tokens. Please check your connection.',
-          () => this.loadPrimaryMarket()
-        );
+        if (!silent) {
+          this.toast.errorWithRetry(
+            'Failed to load primary market tokens. Please check your connection.',
+            () => this.loadPrimaryMarket()
+          );
+        }
       }
     });
   }
@@ -168,9 +172,9 @@ export class InvestorMarketplaceComponent implements OnInit {
       next: _ => {
         this.loading = false;
         this.toast.success('Token purchased successfully.');
-        // After buying: refresh both lists
-        this.loadYourTokens();
-        this.loadPrimaryMarket();
+        // After buying: refresh both lists (silent to avoid duplicate toasts)
+        this.loadYourTokens(true);
+        this.loadPrimaryMarket(true);
       },
       error: err => {
         console.error(err);
@@ -183,7 +187,7 @@ export class InvestorMarketplaceComponent implements OnInit {
   // -----------------------------
   // Secondary market
   // -----------------------------
-  loadSecondaryMarket() {
+  loadSecondaryMarket(silent = false) {
     this.loading = true;
 
     this.serviceTokenApi
@@ -196,10 +200,12 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.loading = false;
-          this.toast.errorWithRetry(
-            'Failed to load secondary market tokens. Please check your connection.',
-            () => this.loadSecondaryMarket()
-          );
+          if (!silent) {
+            this.toast.errorWithRetry(
+              'Failed to load secondary market tokens. Please check your connection.',
+              () => this.loadSecondaryMarket()
+            );
+          }
         }
       });
   }
@@ -211,8 +217,9 @@ export class InvestorMarketplaceComponent implements OnInit {
       next: _ => {
         this.loading = false;
         this.toast.success('Token purchased successfully.');
-        this.loadYourTokens();
-        this.loadSecondaryMarket();
+        // After buying: refresh both lists (silent to avoid duplicate toasts)
+        this.loadYourTokens(true);
+        this.loadSecondaryMarket(true);
       },
       error: err => {
         console.error(err);

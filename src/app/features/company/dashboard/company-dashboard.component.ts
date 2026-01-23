@@ -104,7 +104,7 @@ export class CompanyDashboardComponent implements OnInit {
   // -----------------------------
   // Requests
   // -----------------------------
-  loadRequests() {
+  loadRequests(silent = false) {
     if (!this.company) return;
 
     this.requestsLoading = true;
@@ -118,10 +118,12 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.toast.errorWithRetry(
-          'Failed to load requests. Please check your connection.',
-          () => this.loadRequests()
-        );
+        if (!silent) {
+          this.toast.errorWithRetry(
+            'Failed to load requests. Please check your connection.',
+            () => this.loadRequests()
+          );
+        }
       }
     });
   }
@@ -166,7 +168,7 @@ export class CompanyDashboardComponent implements OnInit {
       next: _ => {
         this.modalLoading = false;
         this.closeModal();
-        this.loadRequests();
+        this.loadRequests(true);
         this.toast.success('Request created successfully.');
       },
       error: err => {
@@ -216,7 +218,7 @@ export class CompanyDashboardComponent implements OnInit {
       next: _ => {
         this.modalLoading = false;
         this.closeModal();
-        this.loadRequests();
+        this.loadRequests(true);
         this.toast.success('Request updated successfully.');
       },
       error: err => {
@@ -244,7 +246,7 @@ export class CompanyDashboardComponent implements OnInit {
       next: _ => {
         this.requestsLoading = false;
         this.selectedRequest = null;
-        this.loadRequests();
+        this.loadRequests(true);
         this.toast.success('Request deleted successfully.');
       },
       error: err => {
@@ -322,16 +324,16 @@ export class CompanyDashboardComponent implements OnInit {
   // -----------------------------
   // Products
   // -----------------------------
-  reloadProducts() {
+  reloadProducts(silent = false) {
     if (!this.company) return;
 
     this.productSkip = 0;
     this.products = [];
     this.selectedProduct = null;
-    this.loadProductsPage(true);
+    this.loadProductsPage(true, silent);
   }
 
-  loadProductsPage(resetSelection: boolean = false) {
+  loadProductsPage(resetSelection: boolean = false, silent = false) {
     if (!this.company) return;
 
     if (resetSelection) this.selectedProduct = null;
@@ -352,10 +354,12 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.toast.errorWithRetry(
-          'Failed to load products. Please check your connection.',
-          () => this.loadProductsPage(false)
-        );
+        if (!silent) {
+          this.toast.errorWithRetry(
+            'Failed to load products. Please check your connection.',
+            () => this.loadProductsPage(false)
+          );
+        }
       }
     });
   }
@@ -420,7 +424,7 @@ export class CompanyDashboardComponent implements OnInit {
       next: _ => {
         this.modalLoading = false;
         this.closeModal();
-        this.reloadProducts();
+        this.reloadProducts(true);
         this.toast.success('Product created successfully.');
       },
       error: err => {
@@ -471,9 +475,9 @@ export class CompanyDashboardComponent implements OnInit {
       next: _ => {
         this.modalLoading = false;
         this.closeModal();
-        this.reloadProducts();
+        this.reloadProducts(true);
         // If edit was invoked from Requests tab, refresh Requests as well (prodId referenced there)
-        this.loadRequests();
+        this.loadRequests(true);
         this.toast.success('Product updated successfully.');
       },
       error: err => {
@@ -502,8 +506,8 @@ export class CompanyDashboardComponent implements OnInit {
       next: _ => {
         this.productsLoading = false;
         this.selectedProduct = null;
-        this.reloadProducts();
-        this.loadRequests();
+        this.reloadProducts(true);
+        this.loadRequests(true);
         this.toast.success('Product deleted successfully.');
       },
       error: err => {
