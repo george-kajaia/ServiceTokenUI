@@ -1,6 +1,6 @@
 // ============================================
-// User Theme (Company & Investor)
-// Trust-focused blue/teal palette
+// User Theme (Company & Investor) - Light
+// Professional blue/cyan palette with soft gray tint
 // ============================================
 
 @use '../variables' as *;
@@ -19,21 +19,21 @@ $user-accent-400: #34d399;  // Emerald
 $user-accent-500: #10b981;
 $user-accent-600: #059669;
 
-// Background Colors
-$user-bg-base: #0a0f1a;
-$user-bg-surface: #111827;
-$user-bg-elevated: #1e293b;
-$user-bg-hover: #273449;
+// Background Colors - Light with blue tint
+$user-bg-base: #f8fafc;        // Very light blue-gray
+$user-bg-surface: #ffffff;      // White
+$user-bg-elevated: #f0f9ff;     // Light sky blue
+$user-bg-hover: #e0f2fe;        // Soft cyan hover
 
 // Border Colors
-$user-border-subtle: #1e293b;
-$user-border-default: #334155;
-$user-border-strong: #475569;
+$user-border-subtle: #e0f2fe;
+$user-border-default: #bae6fd;
+$user-border-strong: #7dd3fc;
 
-// Text Colors
-$user-text-primary: #f1f5f9;
-$user-text-secondary: #94a3b8;
-$user-text-muted: #64748b;
+// Text Colors - Dark for light theme
+$user-text-primary: #0c4a6e;    // Deep sky blue
+$user-text-secondary: #0369a1;  // Dark cyan
+$user-text-muted: #64748b;      // Slate gray
 
 // Gradient
 $user-gradient-primary: linear-gradient(135deg, $user-primary-500 0%, $user-secondary-500 100%);
@@ -77,11 +77,12 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
 .card {
   @include card($user-bg-surface, $user-border-subtle);
   padding: $space-6;
-  box-shadow: $shadow-lg;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
 
   &--elevated {
-    background: $user-bg-elevated;
+    background: $user-bg-surface;
     border-color: $user-border-default;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
   &__header {
@@ -128,20 +129,20 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
 
   &--primary {
     background: $user-gradient-primary;
-    color: $user-bg-base;
+    color: #ffffff;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 16px rgba($user-primary-500, 0.4);
+      box-shadow: 0 4px 16px rgba($user-primary-500, 0.35);
     }
   }
 
   &--secondary {
-    background: $user-bg-elevated;
+    background: $user-bg-surface;
     border-color: $user-border-default;
     color: $user-text-primary;
 
     &:hover:not(:disabled) {
-      background: $user-bg-hover;
+      background: $user-bg-elevated;
       border-color: $user-border-strong;
     }
   }
@@ -151,8 +152,8 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
     color: $user-text-secondary;
 
     &:hover:not(:disabled) {
-      background: $user-bg-elevated;
-      color: $user-text-primary;
+      background: rgba($user-primary-500, 0.1);
+      color: $user-primary-600;
     }
   }
 
@@ -203,13 +204,13 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
   display: block;
   width: 100%;
   padding: $space-2 $space-3;
-  background: $user-bg-base;
+  background: $user-bg-surface;
   border: 1px solid $user-border-default;
   border-radius: $radius-md;
   color: $user-text-primary;
   font-size: $font-size-sm;
   font-family: inherit;
-  transition: border-color $transition-base;
+  transition: all $transition-base;
 
   &::placeholder {
     color: $user-text-muted;
@@ -218,6 +219,7 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
   &:focus {
     outline: none;
     border-color: $user-primary-500;
+    box-shadow: 0 0 0 3px rgba($user-primary-500, 0.1);
   }
 
   &--error {
@@ -229,7 +231,7 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
   @extend .input;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230369a1' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right $space-3 center;
   padding-right: $space-8;
@@ -262,9 +264,13 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
 .table {
   width: 100%;
   border-collapse: collapse;
+  background: $user-bg-surface;
+  border-radius: $radius-md;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &__head {
-    background: $user-bg-base;
+    background: $user-bg-elevated;
 
     th {
       padding: $space-3 $space-4;
@@ -281,14 +287,14 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
   &__body {
     tr {
       border-bottom: 1px solid $user-border-subtle;
-      transition: background $transition-fast;
+      transition: all $transition-fast;
 
       &:hover {
-        background: $user-bg-hover;
+        background: rgba($user-primary-500, 0.08);
       }
 
       &--selected {
-        background: rgba($user-primary-500, 0.1);
+        background: rgba($user-primary-500, 0.12);
       }
 
       &--clickable {
@@ -322,13 +328,13 @@ $user-gradient-accent: linear-gradient(135deg, $user-accent-500 0%, $user-primar
     transition: all $transition-base;
 
     &:hover:not(.tabs__tab--active) {
-      background: $user-bg-elevated;
-      color: $user-text-primary;
+      background: $user-primary-500;
+      color: #ffffff;
     }
 
     &--active {
       background: $user-gradient-primary;
-      color: $user-bg-base;
+      color: #ffffff;
     }
   }
 }

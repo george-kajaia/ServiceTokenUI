@@ -1,19 +1,19 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
-// User theme colors (consistent with company dashboard)
-$market-bg-base: #0a0f1a;
-$market-bg-surface: #111827;
-$market-bg-elevated: #1e293b;
-$market-bg-hover: #273449;
+// User theme colors - Light with blue tint (consistent with company dashboard)
+$market-bg-base: #f8fafc;
+$market-bg-surface: #ffffff;
+$market-bg-elevated: #f0f9ff;
+$market-bg-hover: #e0f2fe;
 $market-primary: #06b6d4;
 $market-secondary: #3b82f6;
 $market-accent: #10b981;
-$market-text-primary: #f1f5f9;
-$market-text-secondary: #94a3b8;
+$market-text-primary: #0c4a6e;
+$market-text-secondary: #0369a1;
 $market-text-muted: #64748b;
-$market-border-subtle: #1e293b;
-$market-border-default: #334155;
+$market-border-subtle: #e0f2fe;
+$market-border-default: #bae6fd;
 
 :host {
   display: block;
@@ -50,7 +50,8 @@ $market-border-default: #334155;
   border: 1px solid $market-border-subtle;
   border-radius: $radius-lg;
   font-size: $font-size-sm;
-  color: $market-text-secondary;
+  color: $market-text-muted;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .investor-name {
@@ -81,13 +82,13 @@ $market-border-default: #334155;
   transition: all $transition-base;
 
   &:hover:not(.active) {
-    background: $market-bg-elevated;
-    color: $market-text-primary;
+    background: $market-primary;
+    color: #ffffff;
   }
 
   &.active {
     background: linear-gradient(135deg, $market-primary, $market-secondary);
-    color: $market-bg-base;
+    color: #ffffff;
   }
 }
 
@@ -99,6 +100,7 @@ $market-border-default: #334155;
   background: $market-bg-surface;
   border: 1px solid $market-border-subtle;
   border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 // ============================================
@@ -112,23 +114,24 @@ $market-border-default: #334155;
     align-items: center;
     gap: $space-3;
     font-size: $font-size-sm;
-    color: $market-text-secondary;
+    color: $market-text-muted;
   }
 
   select {
     padding: $space-2 $space-3;
-    background: $market-bg-base;
+    background: $market-bg-surface;
     border: 1px solid $market-border-default;
     border-radius: $radius-md;
     color: $market-text-primary;
     font-size: $font-size-sm;
     cursor: pointer;
-    transition: border-color $transition-base;
+    transition: all $transition-base;
     min-width: 200px;
 
     &:focus {
       outline: none;
       border-color: $market-primary;
+      box-shadow: 0 0 0 3px rgba($market-primary, 0.1);
     }
   }
 }
@@ -139,6 +142,10 @@ $market-border-default: #334155;
 .grid {
   width: 100%;
   border-collapse: collapse;
+  background: $market-bg-surface;
+  border-radius: $radius-md;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   th,
   td {
@@ -149,7 +156,7 @@ $market-border-default: #334155;
   }
 
   th {
-    background: $market-bg-base;
+    background: $market-bg-elevated;
     color: $market-text-secondary;
     font-weight: $font-weight-semibold;
     font-size: $font-size-xs;
@@ -157,11 +164,15 @@ $market-border-default: #334155;
     letter-spacing: 0.05em;
   }
 
+  td {
+    color: $market-text-primary;
+  }
+
   tbody tr {
-    transition: background $transition-fast;
+    transition: all $transition-fast;
 
     &:hover {
-      background: $market-bg-hover;
+      background: rgba($market-primary, 0.08);
     }
   }
 }
@@ -181,19 +192,19 @@ $market-border-default: #334155;
 
   &.primary {
     background: linear-gradient(135deg, $market-accent, $market-primary);
-    color: $market-bg-base;
+    color: #ffffff;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 12px rgba($market-accent, 0.4);
+      box-shadow: 0 4px 12px rgba($market-accent, 0.35);
     }
   }
 
   &.secondary {
     background: linear-gradient(135deg, $warning-500, $warning-400);
-    color: $market-bg-base;
+    color: #ffffff;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 12px rgba($warning-500, 0.4);
+      box-shadow: 0 4px 12px rgba($warning-500, 0.35);
     }
   }
 

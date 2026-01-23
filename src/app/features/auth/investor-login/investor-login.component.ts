@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { InvestorApiService } from '../../../core/api/investor-api.service';
 import { InvestorStateService } from '../../../core/state/investor-state.service';
 import { InvestorCreateDto } from '../../../shared/models/dtos.model';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-investor-login',
@@ -28,8 +29,7 @@ export class InvestorLoginComponent {
   };
 
   loading = false;
-  error = '';
-  info = '';
+  private toast = inject(ToastService);
 
   constructor(
     private investorApi: InvestorApiService,
@@ -39,14 +39,10 @@ export class InvestorLoginComponent {
 
   toggleMode() {
     this.isRegisterMode = !this.isRegisterMode;
-    this.error = '';
-    this.info = '';
   }
 
   onLogin() {
     this.loading = true;
-    this.error = '';
-    this.info = '';
 
     this.investorApi.login(this.loginModel).subscribe({
       next: investor => {
@@ -57,26 +53,24 @@ export class InvestorLoginComponent {
       error: err => {
         this.loading = false;
         console.error(err);
-        this.error = 'Login failed.';
+        this.toast.error('Login failed. Please check your username and password.');
       }
     });
   }
 
   onRegister() {
     this.loading = true;
-    this.error = '';
-    this.info = '';
 
     this.investorApi.register(this.registerModel).subscribe({
       next: _ => {
         this.loading = false;
-        this.info = 'Registration successful. Please login.';
+        this.toast.success('Registration successful! You can now login with your credentials.');
         this.isRegisterMode = false;
       },
       error: err => {
         this.loading = false;
         console.error(err);
-        this.error = 'Registration failed.';
+        this.toast.error('Registration failed. Username or public key may already be in use.');
       }
     });
   }

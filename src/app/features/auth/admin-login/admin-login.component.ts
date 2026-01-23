@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AdminApiService } from '../../../core/api/admin-api.service';
 import { AdminStateService } from '../../../core/state/admin-state.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-admin-login',
@@ -19,7 +20,7 @@ export class AdminLoginComponent {
   };
 
   loading = false;
-  error = '';
+  private toast = inject(ToastService);
 
   constructor(
     private adminApi: AdminApiService,
@@ -29,7 +30,6 @@ export class AdminLoginComponent {
 
   onLogin() {
     this.loading = true;
-    this.error = '';
 
     this.adminApi.login(this.model).subscribe({
       next: user => {
@@ -40,7 +40,7 @@ export class AdminLoginComponent {
       error: err => {
         this.loading = false;
         console.error(err);
-        this.error = 'Admin login failed.';
+        this.toast.error('Admin login failed. Please check your credentials.');
       }
     });
   }

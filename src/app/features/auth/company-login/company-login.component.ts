@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CompanyApiService } from '../../../core/api/company-api.service';
 import { CompanyStateService } from '../../../core/state/company-state.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-company-login',
@@ -28,8 +29,7 @@ export class CompanyLoginComponent {
   };
 
   loading = false;
-  error = '';
-  info = '';
+  private toast = inject(ToastService);
 
   constructor(
     private companyApi: CompanyApiService,
@@ -39,14 +39,10 @@ export class CompanyLoginComponent {
 
   toggleMode() {
     this.isRegisterMode = !this.isRegisterMode;
-    this.error = '';
-    this.info = '';
   }
 
   onLogin() {
     this.loading = true;
-    this.error = '';
-    this.info = '';
 
     this.companyApi.login(this.loginModel).subscribe({
       next: companyUser => {
@@ -60,32 +56,30 @@ export class CompanyLoginComponent {
           error: err => {
             this.loading = false;
             console.error(err);
-            this.error = 'Login succeeded, but failed to load company data.';
+            this.toast.error('Login succeeded, but could not load company data. Please try logging in again.');
           }
         });
       },
       error: err => {
         this.loading = false;
         console.error(err);
-        this.error = 'Login failed. Please check your credentials.';
+        this.toast.error('Login failed. Please check your username and password.');
       }
     });
   }
 
   onRegister() {
     this.loading = true;
-    this.error = '';
-    this.info = '';
     this.companyApi.register(this.registerModel).subscribe({
       next: _ => {
         this.loading = false;
-        this.info = 'Registration successful. Please login with your credentials.';
+        this.toast.success('Registration successful! You can now login with your credentials.');
         this.isRegisterMode = false;
       },
       error: err => {
         this.loading = false;
         console.error(err);
-        this.error = 'Registration failed.';
+        this.toast.error('Registration failed. Username may already be taken.');
       }
     });
   }

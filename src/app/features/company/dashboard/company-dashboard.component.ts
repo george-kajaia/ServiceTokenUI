@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { CompanyStateService } from '../../../core/state/company-state.service';
 import { RequestApiService } from '../../../core/api/request-api.service';
 import { ProductApiService } from '../../../core/api/product-api.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { DialogService } from '../../../core/services/dialog.service';
 
 import { Company } from '../../../shared/models/company.model';
 import { Request, RequestStatus } from '../../../shared/models/request.model';
@@ -37,13 +39,11 @@ export class CompanyDashboardComponent implements OnInit {
   // Requests tab state
   requests: Request[] = [];
   requestsLoading = false;
-  requestsError = '';
   selectedRequest: Request | null = null;
 
   // Products tab state
   products: Product[] = [];
   productsLoading = false;
-  productsError = '';
   selectedProduct: Product | null = null;
 
   // Products query state (API does not expose CompanyId filter; we filter client-side)
@@ -75,6 +75,9 @@ export class CompanyDashboardComponent implements OnInit {
     scheduleType: { periodType: SchedulePeriodType.None, periodNumber: null }
   };
 
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
+
   constructor(
     private router: Router,
     private companyState: CompanyStateService,
@@ -105,7 +108,6 @@ export class CompanyDashboardComponent implements OnInit {
     if (!this.company) return;
 
     this.requestsLoading = true;
-    this.requestsError = '';
     this.selectedRequest = null;
 
     this.requestApi.getAll(this.company.id, RequestStatus.None).subscribe({
@@ -116,7 +118,10 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.requestsError = 'Failed to load requests.';
+        this.toast.errorWithRetry(
+          'Failed to load requests. Please check your connection.',
+          () => this.loadRequests()
+        );
       }
     });
   }
@@ -130,7 +135,6 @@ export class CompanyDashboardComponent implements OnInit {
 
     this.openModal('requestView', 'Request details');
     // We already have the request object from the grid; show it directly.
-    // (Backend GetById route token naming is inconsistent in the provided API.)
     this.modalRequest = { ...this.selectedRequest };
   }
 
@@ -163,11 +167,12 @@ export class CompanyDashboardComponent implements OnInit {
         this.modalLoading = false;
         this.closeModal();
         this.loadRequests();
+        this.toast.success('Request created successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to create request.';
+        this.toast.error('Could not create request. Please verify the product ID and try again.');
       }
     });
   }
@@ -212,36 +217,43 @@ export class CompanyDashboardComponent implements OnInit {
         this.modalLoading = false;
         this.closeModal();
         this.loadRequests();
+        this.toast.success('Request updated successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to update request.';
+        this.toast.error('Could not update request. Please try again.');
       }
     });
   }
 
-  onRequestDelete() {
+  async onRequestDelete() {
     if (!this.selectedRequest) return;
-    if (!confirm(`Delete request #${this.selectedRequest.id}?`)) return;
+
+    const confirmed = await this.dialog.confirm({
+      title: 'Delete Request',
+      message: `Are you sure you want to delete request #${this.selectedRequest.id}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+    if (!confirmed) return;
 
     this.requestsLoading = true;
-    this.requestsError = '';
 
     this.requestApi.delete(this.selectedRequest.id, this.selectedRequest.rowVersion).subscribe({
       next: _ => {
         this.requestsLoading = false;
         this.selectedRequest = null;
         this.loadRequests();
+        this.toast.success('Request deleted successfully.');
       },
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.requestsError = 'Failed to delete request.';
+        this.toast.error('Could not delete request. Please try again.');
       }
     });
   }
-
 
   // Row-level workflow actions (per request record)
   authorizeRequestRow(r: Request, event?: Event) {
@@ -249,17 +261,17 @@ export class CompanyDashboardComponent implements OnInit {
     if (Number(r.status) !== RequestStatus.Created) return;
 
     this.requestsLoading = true;
-    this.requestsError = '';
 
     this.requestApi.authorize(r.id, r.rowVersion).subscribe({
       next: updated => {
         this.requestsLoading = false;
         this.patchRequestInList(updated);
+        this.toast.success('Request authorized.');
       },
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.requestsError = 'Failed to authorize request.';
+        this.toast.error('Failed to authorize request. Please try again.');
       }
     });
   }
@@ -269,39 +281,17 @@ export class CompanyDashboardComponent implements OnInit {
     if (Number(r.status) !== RequestStatus.Authorised) return;
 
     this.requestsLoading = true;
-    this.requestsError = '';
 
     this.requestApi.deauthorize(r.id, r.rowVersion).subscribe({
       next: updated => {
         this.requestsLoading = false;
         this.patchRequestInList(updated);
+        this.toast.success('Request deauthorized.');
       },
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.requestsError = 'Failed to deauthorize request.';
-      }
-    });
-  }
-
-  deleteRequestRow(r: Request, event?: Event) {
-    event?.stopPropagation();
-    if (!confirm(`Delete request #${r.id}?`)) return;
-
-    this.requestsLoading = true;
-    this.requestsError = '';
-
-    this.requestApi.delete(r.id, r.rowVersion).subscribe({
-      next: _ => {
-        this.requestsLoading = false;
-        // Remove from local list
-        this.requests = this.requests.filter(x => x.id !== r.id);
-        if (this.selectedRequest?.id === r.id) this.selectedRequest = null;
-      },
-      error: err => {
-        console.error(err);
-        this.requestsLoading = false;
-        this.requestsError = 'Failed to delete request.';
+        this.toast.error('Failed to deauthorize request. Please try again.');
       }
     });
   }
@@ -346,7 +336,6 @@ export class CompanyDashboardComponent implements OnInit {
 
     if (resetSelection) this.selectedProduct = null;
     this.productsLoading = true;
-    this.productsError = '';
 
     this.productApi.getAll(this.productSkip, this.productTake, this.productSearch || null).subscribe({
       next: data => {
@@ -359,14 +348,14 @@ export class CompanyDashboardComponent implements OnInit {
 
         this.products = Array.from(existing.values()).sort((a, b) => a.id - b.id);
         this.productsLoading = false;
-
-        // Move to next page only when user requests "Load more"
-        // (we keep productSkip for loadMore() handler)
       },
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.productsError = 'Failed to load products.';
+        this.toast.errorWithRetry(
+          'Failed to load products. Please check your connection.',
+          () => this.loadProductsPage(false)
+        );
       }
     });
   }
@@ -394,7 +383,8 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to load product details.';
+        this.closeModal();
+        this.toast.error('Could not load product details. Please try again.');
       }
     });
   }
@@ -431,11 +421,12 @@ export class CompanyDashboardComponent implements OnInit {
         this.modalLoading = false;
         this.closeModal();
         this.reloadProducts();
+        this.toast.success('Product created successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to create product.';
+        this.toast.error('Could not create product. Please check the form data and try again.');
       }
     });
   }
@@ -459,7 +450,8 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to load product.';
+        this.closeModal();
+        this.toast.error('Could not load product for editing. Please try again.');
       }
     });
   }
@@ -482,23 +474,29 @@ export class CompanyDashboardComponent implements OnInit {
         this.reloadProducts();
         // If edit was invoked from Requests tab, refresh Requests as well (prodId referenced there)
         this.loadRequests();
+        this.toast.success('Product updated successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.modalError = 'Failed to update product.';
+        this.toast.error('Could not update product. Please check the form data and try again.');
       }
     });
   }
 
-  onProductDelete() {
+  async onProductDelete() {
     if (!this.selectedProduct) return;
 
     const prodId = this.selectedProduct.id;
-    if (!confirm(`Delete product #${prodId}?`)) return;
+    const confirmed = await this.dialog.confirm({
+      title: 'Delete Product',
+      message: `Are you sure you want to delete product #${prodId}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+    if (!confirmed) return;
 
     this.productsLoading = true;
-    this.productsError = '';
 
     this.productApi.delete(prodId).subscribe({
       next: _ => {
@@ -506,11 +504,12 @@ export class CompanyDashboardComponent implements OnInit {
         this.selectedProduct = null;
         this.reloadProducts();
         this.loadRequests();
+        this.toast.success('Product deleted successfully.');
       },
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.productsError = 'Failed to delete product.';
+        this.toast.error('Could not delete product. It may be in use or already deleted.');
       }
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +6,8 @@ import { Router, RouterLink } from '@angular/router';
 import { AdminStateService } from '../../../core/state/admin-state.service';
 import { CompanyApiService } from '../../../core/api/company-api.service';
 import { RequestApiService } from '../../../core/api/request-api.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { DialogService } from '../../../core/services/dialog.service';
 
 import { Company } from '../../../shared/models/company.model';
 import { Request, RequestStatus } from '../../../shared/models/request.model';
@@ -36,7 +38,9 @@ export class AdminDashboardComponent implements OnInit {
   };
 
   loading = false;
-  error = '';
+
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
 
   constructor(
     private adminState: AdminStateService,
@@ -56,7 +60,6 @@ export class AdminDashboardComponent implements OnInit {
 
   setTab(tab: 'companies' | 'requests') {
     this.activeTab = tab;
-    this.error = '';
 
     if (tab === 'companies') {
       this.loadCompanies();
@@ -70,7 +73,6 @@ export class AdminDashboardComponent implements OnInit {
   // -----------------------------
   loadCompanies() {
     this.loading = true;
-    this.error = '';
 
     this.companyApi.getAll(0, 500, null).subscribe({
       next: list => {
@@ -81,7 +83,10 @@ export class AdminDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to load companies.';
+        this.toast.errorWithRetry(
+          'Failed to load companies. Please check your connection.',
+          () => this.loadCompanies()
+        );
       }
     });
   }
@@ -101,15 +106,14 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   approveCompany(company: Company) {
-    this.error = '';
     this.companyApi.approveCompany(company.id, company.rowVersion).subscribe({
       next: _ => {
-        // Backend returns 200 OK with no body; refresh to get new rowVersion and status.
+        this.toast.success('Company approved successfully.');
         this.loadCompanies();
       },
       error: err => {
         console.error(err);
-        this.error = 'Failed to approve company.';
+        this.toast.error('Could not approve company. Please try again.');
       }
     });
   }
@@ -119,7 +123,6 @@ export class AdminDashboardComponent implements OnInit {
   // -----------------------------
   loadRequests() {
     this.loading = true;
-    this.error = '';
 
     let cid = -1;
     if (this.requestFilter.companyId) {
@@ -142,7 +145,10 @@ export class AdminDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to load requests.';
+        this.toast.errorWithRetry(
+          'Failed to load requests. Please check your connection.',
+          () => this.loadRequests()
+        );
       }
     });
   }
@@ -160,47 +166,63 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   authorizeRequest(r: Request) {
-    this.error = '';
     this.requestApi.authorize(r.id, r.rowVersion).subscribe({
-      next: _ => this.loadRequests(),
+      next: _ => {
+        this.toast.success('Request authorized successfully.');
+        this.loadRequests();
+      },
       error: err => {
         console.error(err);
-        this.error = 'Failed to authorize request.';
+        this.toast.error('Failed to authorize request. Please try again.');
       }
     });
   }
 
   deauthorizeRequest(r: Request) {
-    this.error = '';
     this.requestApi.deauthorize(r.id, r.rowVersion).subscribe({
-      next: _ => this.loadRequests(),
+      next: _ => {
+        this.toast.success('Request deauthorized.');
+        this.loadRequests();
+      },
       error: err => {
         console.error(err);
-        this.error = 'Failed to deauthorize request.';
+        this.toast.error('Failed to deauthorize request. Please try again.');
       }
     });
   }
 
   approveRequest(r: Request) {
-    this.error = '';
     this.requestApi.approve(r.id, r.rowVersion).subscribe({
-      next: _ => this.loadRequests(),
+      next: _ => {
+        this.toast.success('Request approved successfully.');
+        this.loadRequests();
+      },
       error: err => {
         console.error(err);
-        this.error = 'Failed to approve request.';
+        this.toast.error('Failed to approve request. Please try again.');
       }
     });
   }
 
-  deleteRequest(r: Request) {
-    if (!confirm(`Delete request #${r.id}?`)) return;
+  async deleteRequest(r: Request) {
+    const confirmed = await this.dialog.confirm({
+      title: 'Delete Request',
+      message: `Are you sure you want to delete request #${r.id}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
 
-    this.error = '';
+    if (!confirmed) return;
+
     this.requestApi.delete(r.id, r.rowVersion).subscribe({
-      next: _ => this.loadRequests(),
+      next: _ => {
+        this.toast.success('Request deleted.');
+        this.loadRequests();
+      },
       error: err => {
         console.error(err);
-        this.error = 'Failed to delete request.';
+        this.toast.error('Failed to delete request. Please try again.');
       }
     });
   }

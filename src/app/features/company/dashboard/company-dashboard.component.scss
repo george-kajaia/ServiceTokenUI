@@ -1,19 +1,19 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
-// User theme colors
-$dash-bg-base: #0a0f1a;
-$dash-bg-surface: #111827;
-$dash-bg-elevated: #1e293b;
-$dash-bg-hover: #273449;
+// User theme colors - Light with blue tint
+$dash-bg-base: #f8fafc;
+$dash-bg-surface: #ffffff;
+$dash-bg-elevated: #f0f9ff;
+$dash-bg-hover: #e0f2fe;
 $dash-primary: #06b6d4;
 $dash-secondary: #3b82f6;
 $dash-accent: #10b981;
-$dash-text-primary: #f1f5f9;
-$dash-text-secondary: #94a3b8;
+$dash-text-primary: #0c4a6e;
+$dash-text-secondary: #0369a1;
 $dash-text-muted: #64748b;
-$dash-border-subtle: #1e293b;
-$dash-border-default: #334155;
+$dash-border-subtle: #e0f2fe;
+$dash-border-default: #bae6fd;
 
 :host {
   display: block;
@@ -45,6 +45,7 @@ $dash-border-default: #334155;
   border: 1px solid $dash-border-subtle;
   border-radius: $radius-lg;
   margin-bottom: $space-6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &-grid {
     display: grid;
@@ -115,13 +116,13 @@ $dash-border-default: #334155;
   transition: all $transition-base;
 
   &:hover:not(.active) {
-    background: $dash-bg-elevated;
-    color: $dash-text-primary;
+    background: $dash-primary;
+    color: #ffffff;
   }
 
   &.active {
     background: linear-gradient(135deg, $dash-primary, $dash-secondary);
-    color: $dash-bg-base;
+    color: #ffffff;
   }
 }
 
@@ -133,6 +134,7 @@ $dash-border-default: #334155;
   background: $dash-bg-surface;
   border: 1px solid $dash-border-subtle;
   border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &-header {
     @include flex-between;
@@ -143,6 +145,7 @@ $dash-border-default: #334155;
     h3 {
       @include text-heading;
       margin: 0;
+      color: $dash-text-primary;
     }
   }
 }
@@ -179,6 +182,10 @@ $dash-border-default: #334155;
   width: 100%;
   border-collapse: collapse;
   margin-top: $space-2;
+  background: $dash-bg-surface;
+  border-radius: $radius-md;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   th,
   td {
@@ -189,7 +196,7 @@ $dash-border-default: #334155;
   }
 
   th {
-    background: $dash-bg-base;
+    background: $dash-bg-elevated;
     color: $dash-text-secondary;
     font-weight: $font-weight-semibold;
     font-size: $font-size-xs;
@@ -197,16 +204,20 @@ $dash-border-default: #334155;
     letter-spacing: 0.05em;
   }
 
+  td {
+    color: $dash-text-primary;
+  }
+
   tbody tr {
     cursor: pointer;
-    transition: background $transition-fast;
+    transition: all $transition-fast;
 
     &:hover {
-      background: $dash-bg-hover;
+      background: rgba($dash-primary, 0.08);
     }
 
     &.selected {
-      background: rgba($dash-primary, 0.1);
+      background: rgba($dash-primary, 0.12);
       outline: 2px solid rgba($dash-primary, 0.5);
       outline-offset: -2px;
     }
@@ -225,7 +236,7 @@ $dash-border-default: #334155;
 // ============================================
 button {
   padding: $space-2 $space-3;
-  background: $dash-bg-elevated;
+  background: $dash-bg-surface;
   border: 1px solid $dash-border-default;
   border-radius: $radius-md;
   color: $dash-text-primary;
@@ -236,7 +247,9 @@ button {
   @include hover-lift;
 
   &:hover:not(:disabled) {
-    background: $dash-bg-hover;
+    background: rgba($dash-primary, 0.1);
+    border-color: $dash-primary;
+    color: $dash-primary;
   }
 
   &:disabled {
@@ -250,8 +263,9 @@ button {
     color: $dash-text-secondary;
 
     &:hover:not(:disabled) {
-      background: $dash-bg-elevated;
-      color: $dash-text-primary;
+      background: rgba($dash-primary, 0.1);
+      border-color: $dash-primary;
+      color: $dash-primary;
     }
   }
 
@@ -312,8 +326,37 @@ select {
   background: rgba($error-500, 0.1);
   border: 1px solid rgba($error-500, 0.3);
   border-radius: $radius-md;
-  color: $error-400;
+  color: $error-500;
   font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+
+  .error-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+// Form validation
+.validation-error {
+  display: block;
+  margin-top: $space-1;
+  color: $error-500;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+label.has-error {
+  input, select, textarea {
+    border-color: $error-500;
+
+    &:focus {
+      border-color: $error-500;
+      box-shadow: 0 0 0 2px rgba($error-500, 0.2);
+    }
+  }
 }
 
 .muted {
@@ -354,7 +397,7 @@ select {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba($dash-bg-base, 0.85);
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(4px);
   @include flex-center;
   padding: $space-4;
@@ -369,7 +412,7 @@ select {
   background: $dash-bg-surface;
   border: 1px solid $dash-border-default;
   border-radius: $radius-xl;
-  box-shadow: $shadow-xl;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 
   &-header {
     @include flex-between;
@@ -379,6 +422,7 @@ select {
     h3 {
       @include text-heading;
       margin: 0;
+      color: $dash-text-primary;
     }
   }
 
@@ -423,7 +467,7 @@ select {
     grid-template-columns: 140px 1fr;
     gap: $space-3;
     padding: $space-3;
-    background: $dash-bg-base;
+    background: $dash-bg-elevated;
     border: 1px solid $dash-border-subtle;
     border-radius: $radius-md;
   }

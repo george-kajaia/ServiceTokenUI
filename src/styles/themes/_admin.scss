@@ -1,6 +1,6 @@
 // ============================================
-// Admin Theme
-// Authority-focused purple/amber palette
+// Admin Theme - Light
+// Professional violet palette with soft gray tint
 // ============================================
 
 @use '../variables' as *;
@@ -11,33 +11,33 @@ $admin-primary-400: #a78bfa;  // Violet
 $admin-primary-500: #8b5cf6;
 $admin-primary-600: #7c3aed;
 
-$admin-secondary-400: #fbbf24;  // Amber
-$admin-secondary-500: #f59e0b;
-$admin-secondary-600: #d97706;
+$admin-secondary-400: #c084fc;  // Purple
+$admin-secondary-500: #a855f7;
+$admin-secondary-600: #9333ea;
 
 $admin-accent-400: #f472b6;  // Pink
 $admin-accent-500: #ec4899;
 $admin-accent-600: #db2777;
 
-// Background Colors
-$admin-bg-base: #09090b;
-$admin-bg-surface: #18181b;
-$admin-bg-elevated: #27272a;
-$admin-bg-hover: #3f3f46;
+// Background Colors - Light with violet tint
+$admin-bg-base: #faf8ff;      // Very light violet
+$admin-bg-surface: #ffffff;    // White
+$admin-bg-elevated: #f3f0ff;   // Light violet
+$admin-bg-hover: #ede9fe;      // Soft violet hover
 
 // Border Colors
-$admin-border-subtle: #27272a;
-$admin-border-default: #3f3f46;
-$admin-border-strong: #52525b;
+$admin-border-subtle: #e9e3ff;
+$admin-border-default: #ddd6fe;
+$admin-border-strong: #c4b5fd;
 
-// Text Colors
-$admin-text-primary: #fafafa;
-$admin-text-secondary: #a1a1aa;
-$admin-text-muted: #71717a;
+// Text Colors - Dark for light theme
+$admin-text-primary: #1e1b4b;    // Deep indigo
+$admin-text-secondary: #4c4878;  // Muted indigo
+$admin-text-muted: #7c7a9c;      // Light indigo
 
 // Gradient
-$admin-gradient-primary: linear-gradient(135deg, $admin-primary-500 0%, $admin-accent-500 100%);
-$admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-secondary-400 100%);
+$admin-gradient-primary: linear-gradient(135deg, $admin-primary-500 0%, $admin-secondary-500 100%);
+$admin-gradient-accent: linear-gradient(135deg, $admin-accent-500 0%, $admin-primary-400 100%);
 
 // ============================================
 // Admin Theme Component Styles
@@ -86,10 +86,12 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
 .admin-card {
   @include card($admin-bg-surface, $admin-border-subtle);
   padding: $space-4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
 
   &--elevated {
-    background: $admin-bg-elevated;
+    background: $admin-bg-surface;
     border-color: $admin-border-default;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
   &__header {
@@ -130,29 +132,30 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
 
   &--primary {
     background: $admin-gradient-primary;
-    color: $neutral-950;
+    color: #ffffff;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 16px rgba($admin-primary-500, 0.4);
+      box-shadow: 0 4px 16px rgba($admin-primary-500, 0.35);
     }
   }
 
   &--secondary {
-    background: $admin-bg-elevated;
+    background: $admin-bg-surface;
     border: 1px solid $admin-border-default;
     color: $admin-text-primary;
 
     &:hover:not(:disabled) {
-      background: $admin-bg-hover;
+      background: $admin-bg-elevated;
+      border-color: $admin-border-strong;
     }
   }
 
   &--accent {
     background: $admin-gradient-accent;
-    color: $neutral-950;
+    color: #ffffff;
 
     &:hover:not(:disabled) {
-      box-shadow: 0 4px 16px rgba($admin-secondary-500, 0.4);
+      box-shadow: 0 4px 16px rgba($admin-accent-500, 0.35);
     }
   }
 
@@ -179,8 +182,8 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
     color: $admin-text-secondary;
 
     &:hover:not(:disabled) {
-      background: $admin-bg-elevated;
-      color: $admin-text-primary;
+      background: rgba($admin-primary-500, 0.1);
+      color: $admin-primary-600;
     }
   }
 }
@@ -190,13 +193,13 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
   display: block;
   width: 100%;
   padding: $space-2 $space-3;
-  background: $admin-bg-base;
+  background: $admin-bg-surface;
   border: 1px solid $admin-border-default;
   border-radius: $radius-sm;
   color: $admin-text-primary;
   font-size: $font-size-sm;
   font-family: inherit;
-  transition: border-color $transition-base;
+  transition: all $transition-base;
 
   &::placeholder {
     color: $admin-text-muted;
@@ -205,6 +208,7 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
   &:focus {
     outline: none;
     border-color: $admin-primary-500;
+    box-shadow: 0 0 0 3px rgba($admin-primary-500, 0.1);
   }
 }
 
@@ -212,7 +216,7 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
   @extend .admin-input;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a1a1aa' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234c4878' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right $space-3 center;
   padding-right: $space-8;
@@ -234,9 +238,13 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
 .admin-table {
   width: 100%;
   border-collapse: collapse;
+  background: $admin-bg-surface;
+  border-radius: $radius-md;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &__head {
-    background: $admin-bg-base;
+    background: $admin-bg-elevated;
 
     th {
       padding: $space-2 $space-3;
@@ -253,16 +261,17 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
   &__body {
     tr {
       border-bottom: 1px solid $admin-border-subtle;
-      transition: background $transition-fast;
+      transition: all $transition-fast;
 
       &:hover {
-        background: $admin-bg-hover;
+        background: rgba($admin-primary-500, 0.08);
       }
     }
 
     td {
       padding: $space-2 $space-3;
       font-size: $font-size-sm;
+      color: $admin-text-primary;
     }
   }
 }
@@ -282,18 +291,18 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
     border-radius: $radius-sm;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: $admin-text-muted;
+    color: $admin-text-secondary;
     cursor: pointer;
     transition: all $transition-base;
 
     &:hover:not(.admin-tabs__tab--active) {
-      background: $admin-bg-elevated;
-      color: $admin-text-primary;
+      background: $admin-primary-500;
+      color: #ffffff;
     }
 
     &--active {
       background: $admin-gradient-primary;
-      color: $neutral-950;
+      color: #ffffff;
     }
   }
 }
@@ -337,6 +346,7 @@ $admin-gradient-accent: linear-gradient(135deg, $admin-secondary-500 0%, $admin-
   margin-bottom: $space-4;
   padding: $space-4;
   background: $admin-bg-elevated;
+  border: 1px solid $admin-border-subtle;
   border-radius: $radius-md;
 }
 

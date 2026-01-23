@@ -40,7 +40,6 @@
     </div>
 
     <div *ngIf="requestsLoading" class="info">Loading requests...</div>
-    <div *ngIf="requestsError" class="error">{{ requestsError }}</div>
 
     <table *ngIf="!requestsLoading && requests.length > 0" class="grid">
       <thead>
@@ -81,7 +80,7 @@
       No requests found for this company.
     </div>
 
-    
+
   </section>
 
   <!-- Products Tab -->
@@ -109,7 +108,6 @@
     </div>
 
     <div *ngIf="productsLoading" class="info">Loading products...</div>
-    <div *ngIf="productsError" class="error">{{ productsError }}</div>
 
     <table *ngIf="!productsLoading && products.length > 0" class="grid">
       <thead>
@@ -154,7 +152,13 @@
 
       <div class="modal-body">
         <div *ngIf="modalLoading" class="info">Loading...</div>
-        <div *ngIf="modalError" class="error">{{ modalError }}</div>
+        <div *ngIf="modalError" class="error" role="alert">
+          <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4m0 4h.01"/>
+          </svg>
+          {{ modalError }}
+        </div>
 
         <!-- Request View -->
         <ng-container *ngIf="modalMode === 'requestView' && modalRequest">
@@ -218,25 +222,56 @@
 
         <!-- Product Add/Edit -->
         <ng-container *ngIf="modalMode === 'productAdd' || modalMode === 'productEdit'">
-          <form (ngSubmit)="modalMode === 'productAdd' ? submitProductAdd() : submitProductEdit()" class="form">
-            <label>
+          <form #productFormRef="ngForm" (ngSubmit)="productFormRef.valid ? (modalMode === 'productAdd' ? submitProductAdd() : submitProductEdit()) : null" class="form">
+            <label [class.has-error]="nameInput.invalid && nameInput.touched">
               Name
-              <input type="text" [(ngModel)]="productForm.name" name="name" required />
+              <input
+                type="text"
+                [(ngModel)]="productForm.name"
+                name="name"
+                #nameInput="ngModel"
+                required
+                minlength="2" />
+              <span class="validation-error" *ngIf="nameInput.invalid && nameInput.touched">
+                <span *ngIf="nameInput.errors?.['required']">Name is required</span>
+                <span *ngIf="nameInput.errors?.['minlength']">Name must be at least 2 characters</span>
+              </span>
             </label>
 
-            <label>
+            <label [class.has-error]="serviceCountInput.invalid && serviceCountInput.touched">
               Service Count
-              <input type="number" [(ngModel)]="productForm.serviceCount" name="serviceCount" min="0" required />
+              <input
+                type="number"
+                [(ngModel)]="productForm.serviceCount"
+                name="serviceCount"
+                #serviceCountInput="ngModel"
+                min="0"
+                required />
+              <span class="validation-error" *ngIf="serviceCountInput.invalid && serviceCountInput.touched">
+                <span *ngIf="serviceCountInput.errors?.['required']">Service count is required</span>
+                <span *ngIf="serviceCountInput.errors?.['min']">Service count must be at least 0</span>
+              </span>
             </label>
 
-            <label>
+            <label [class.has-error]="priceInput.invalid && priceInput.touched">
               Price
-              <input type="number" step="0.01" [(ngModel)]="productForm.price" name="price" required />
+              <input
+                type="number"
+                step="0.01"
+                [(ngModel)]="productForm.price"
+                name="price"
+                #priceInput="ngModel"
+                min="0.01"
+                required />
+              <span class="validation-error" *ngIf="priceInput.invalid && priceInput.touched">
+                <span *ngIf="priceInput.errors?.['required']">Price is required</span>
+                <span *ngIf="priceInput.errors?.['min']">Price must be greater than 0</span>
+              </span>
             </label>
 
             <label>
               Term (optional)
-              <input type="number" [(ngModel)]="productForm.term" name="term" />
+              <input type="number" [(ngModel)]="productForm.term" name="term" min="1" />
             </label>
 
             <label>
@@ -257,7 +292,7 @@
             </label>
 
             <div class="modal-actions">
-              <button type="submit" [disabled]="modalLoading">
+              <button type="submit" [disabled]="modalLoading || productFormRef.invalid">
                 {{ modalMode === 'productAdd' ? 'Create' : 'Save' }}
               </button>
               <button type="button" class="secondary" (click)="closeModal()">Cancel</button>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { InvestorStateService } from '../../../core/state/investor-state.service';
 import { CompanyApiService } from '../../../core/api/company-api.service';
 import { ServiceTokenApiService } from '../../../core/api/service-token-api.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 import { Company } from '../../../shared/models/company.model';
 import { ScheduleType } from '../../../shared/models/product.model';
@@ -37,7 +38,8 @@ export class InvestorMarketplaceComponent implements OnInit {
   secondaryMarketTokens: ServiceTokenDto[] = [];
 
   loading = false;
-  error = '';
+
+  private toast = inject(ToastService);
 
   constructor(
     private router: Router,
@@ -61,7 +63,6 @@ export class InvestorMarketplaceComponent implements OnInit {
 
   setTab(tab: MarketplaceTab) {
     this.activeTab = tab;
-    this.error = '';
 
     if (tab === 'yourTokens') {
       this.loadYourTokens();
@@ -87,7 +88,6 @@ export class InvestorMarketplaceComponent implements OnInit {
   // -----------------------------
   loadYourTokens() {
     this.loading = true;
-    this.error = '';
 
     this.serviceTokenApi.getInvestorServiceTokens(this.investorPublicKey).subscribe({
       next: list => {
@@ -97,41 +97,44 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to load your service tokens.';
+        this.toast.errorWithRetry(
+          'Failed to load your service tokens. Please check your connection.',
+          () => this.loadYourTokens()
+        );
       }
     });
   }
 
   markForResell(t: ServiceTokenDto) {
     this.loading = true;
-    this.error = '';
 
     this.serviceTokenApi.markServiceTokenForResell(t.id, t.rowVersion).subscribe({
       next: _ => {
         this.loading = false;
+        this.toast.success('Token marked for resell.');
         this.loadYourTokens();
       },
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to mark token for resell.';
+        this.toast.error('Failed to mark token for resell. Please try again.');
       }
     });
   }
 
   cancelReselling(t: ServiceTokenDto) {
     this.loading = true;
-    this.error = '';
 
     this.serviceTokenApi.cancelReselling(t.id, t.rowVersion).subscribe({
       next: _ => {
         this.loading = false;
+        this.toast.success('Reselling cancelled.');
         this.loadYourTokens();
       },
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to cancel reselling.';
+        this.toast.error('Failed to cancel reselling. Please try again.');
       }
     });
   }
@@ -141,7 +144,6 @@ export class InvestorMarketplaceComponent implements OnInit {
   // -----------------------------
   loadPrimaryMarket() {
     this.loading = true;
-    this.error = '';
 
     this.serviceTokenApi.getPrimaryMarketServiceTokens(this.marketCompanyId, this.marketRequestId).subscribe({
       next: list => {
@@ -151,18 +153,21 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to load primary market tokens.';
+        this.toast.errorWithRetry(
+          'Failed to load primary market tokens. Please check your connection.',
+          () => this.loadPrimaryMarket()
+        );
       }
     });
   }
 
   buyPrimary(t: ServiceTokenDto) {
     this.loading = true;
-    this.error = '';
 
     this.serviceTokenApi.buyPrimaryServiceToken(t.id, t.rowVersion, this.investorPublicKey).subscribe({
       next: _ => {
         this.loading = false;
+        this.toast.success('Token purchased successfully.');
         // After buying: refresh both lists
         this.loadYourTokens();
         this.loadPrimaryMarket();
@@ -170,7 +175,7 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to buy service token from primary market.';
+        this.toast.error('Failed to buy token. It may no longer be available.');
       }
     });
   }
@@ -180,7 +185,6 @@ export class InvestorMarketplaceComponent implements OnInit {
   // -----------------------------
   loadSecondaryMarket() {
     this.loading = true;
-    this.error = '';
 
     this.serviceTokenApi
       .getSecondaryMarketServiceTokens(this.investorPublicKey, this.marketCompanyId, this.marketRequestId)
@@ -192,25 +196,28 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.loading = false;
-          this.error = 'Failed to load secondary market tokens.';
+          this.toast.errorWithRetry(
+            'Failed to load secondary market tokens. Please check your connection.',
+            () => this.loadSecondaryMarket()
+          );
         }
       });
   }
 
   buySecondary(t: ServiceTokenDto) {
     this.loading = true;
-    this.error = '';
 
     this.serviceTokenApi.buySecondaryServiceToken(t.id, t.rowVersion, this.investorPublicKey).subscribe({
       next: _ => {
         this.loading = false;
+        this.toast.success('Token purchased successfully.');
         this.loadYourTokens();
         this.loadSecondaryMarket();
       },
       error: err => {
         console.error(err);
         this.loading = false;
-        this.error = 'Failed to buy service token from secondary market.';
+        this.toast.error('Failed to buy token. It may no longer be available.');
       }
     });
   }
