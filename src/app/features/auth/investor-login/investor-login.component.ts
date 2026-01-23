@@ -53,7 +53,7 @@ export class InvestorLoginComponent {
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Login failed.');
+        this.toast.error('Login failed. Please check your username and password.');
       }
     });
   }
@@ -64,13 +64,13 @@ export class InvestorLoginComponent {
     this.investorApi.register(this.registerModel).subscribe({
       next: _ => {
         this.loading = false;
-        this.toast.success('Registration successful. Please login.');
+        this.toast.success('Registration successful! You can now login with your credentials.');
         this.isRegisterMode = false;
       },
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Registration failed.');
+        this.toast.error('Registration failed. Username or public key may already be in use.');
       }
     });
   }

@@ -1,16 +1,23 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ToastService, Toast } from '../../../core/services/toast.service';
+import { ToastService, Toast, ToastType } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-toast',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="toast-container">
-      @for (toast of toastService.toasts(); track toast.id) {
-        <div class="toast" [class]="'toast--' + toast.type" role="alert">
-          <span class="toast__icon">
+    <div class="toast-container" aria-live="polite" aria-atomic="false">
+      @for (toast of toastService.toasts(); track toast.id; let i = $index) {
+        <div
+          class="toast"
+          [class]="'toast--' + toast.type"
+          role="alert"
+          [attr.aria-label]="getAriaLabel(toast)"
+          tabindex="0"
+          (keydown.escape)="toastService.dismiss(toast.id)"
+          (keydown.enter)="handleAction(toast)">
+          <span class="toast__icon" aria-hidden="true">
             @switch (toast.type) {
               @case ('success') { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> }
               @case ('error') { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg> }
@@ -19,7 +26,19 @@ import { ToastService, Toast } from '../../../core/services/toast.service';
             }
           </span>
           <span class="toast__message">{{ toast.message }}</span>
-          <button class="toast__close" (click)="toastService.dismiss(toast.id)" aria-label="Close">
+          @if (toast.action) {
+            <button
+              class="toast__action"
+              (click)="handleAction(toast)"
+              [attr.aria-label]="toast.action.label">
+              {{ toast.action.label }}
+            </button>
+          }
+          <button
+            class="toast__close"
+            (click)="toastService.dismiss(toast.id)"
+            aria-label="Dismiss notification"
+            tabindex="0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
@@ -30,4 +49,24 @@ import { ToastService, Toast } from '../../../core/services/toast.service';
 })
 export class ToastComponent {
   readonly toastService = inject(ToastService);
+
+  private readonly typeLabels: Record<ToastType, string> = {
+    success: 'Success',
+    error: 'Error',
+    warning: 'Warning',
+    info: 'Information'
+  };
+
+  getAriaLabel(toast: Toast): string {
+    const typeLabel = this.typeLabels[toast.type];
+    const actionHint = toast.action ? `. Press Enter to ${toast.action.label.toLowerCase()}.` : '';
+    return `${typeLabel}: ${toast.message}${actionHint} Press Escape to dismiss.`;
+  }
+
+  handleAction(toast: Toast): void {
+    if (toast.action) {
+      toast.action.callback();
+      this.toastService.dismiss(toast.id);
+    }
+  }
 }

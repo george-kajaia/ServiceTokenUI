@@ -9,7 +9,13 @@
   flex-direction: column;
   gap: $space-3;
   pointer-events: none;
-  max-width: 400px;
+  max-width: 420px;
+
+  @media (max-width: $breakpoint-sm) {
+    left: $space-4;
+    right: $space-4;
+    max-width: none;
+  }
 }
 
 .toast {
@@ -23,6 +29,12 @@
   pointer-events: auto;
   animation: slideIn 0.3s ease;
   border-left: 4px solid;
+  outline: none;
+
+  // Focus state for keyboard navigation
+  &:focus-visible {
+    box-shadow: $shadow-lg, 0 0 0 3px rgba($info-500, 0.4);
+  }
 
   &--success {
     border-left-color: $success-500;
@@ -31,6 +43,11 @@
     .toast__icon {
       color: $success-500;
       background: rgba($success-500, 0.12);
+    }
+
+    .toast__action {
+      color: $success-600;
+      &:hover { background: rgba($success-500, 0.1); }
     }
   }
 
@@ -42,6 +59,11 @@
       color: $error-500;
       background: rgba($error-500, 0.12);
     }
+
+    .toast__action {
+      color: $error-600;
+      &:hover { background: rgba($error-500, 0.1); }
+    }
   }
 
   &--warning {
@@ -52,6 +74,11 @@
       color: $warning-500;
       background: rgba($warning-500, 0.12);
     }
+
+    .toast__action {
+      color: $warning-600;
+      &:hover { background: rgba($warning-500, 0.1); }
+    }
   }
 
   &--info {
@@ -61,6 +88,11 @@
     .toast__icon {
       color: $info-500;
       background: rgba($info-500, 0.12);
+    }
+
+    .toast__action {
+      color: $info-600;
+      &:hover { background: rgba($info-500, 0.1); }
     }
   }
 
@@ -87,6 +119,23 @@
     line-height: $line-height-base;
   }
 
+  &__action {
+    flex-shrink: 0;
+    padding: $space-1 $space-3;
+    border: none;
+    background: transparent;
+    border-radius: $radius-md;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+
   &__close {
     flex-shrink: 0;
     width: 28px;
@@ -104,6 +153,11 @@
     &:hover {
       background: $neutral-100;
       color: $neutral-600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $info-500;
+      outline-offset: 2px;
     }
 
     svg {

@@ -118,7 +118,10 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.toast.error('Failed to load requests.');
+        this.toast.errorWithRetry(
+          'Failed to load requests. Please check your connection.',
+          () => this.loadRequests()
+        );
       }
     });
   }
@@ -142,7 +145,7 @@ export class CompanyDashboardComponent implements OnInit {
         console.error(err);
         this.modalLoading = false;
         this.closeModal();
-        this.toast.error('Failed to load request details.');
+        this.toast.error('Could not load request details. Please try again.');
       }
     });
   }
@@ -181,7 +184,7 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Failed to create request.');
+        this.toast.error('Could not create request. Please verify the product ID and try again.');
       }
     });
   }
@@ -218,7 +221,7 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.toast.error('Failed to delete product.');
+        this.toast.error('Could not delete product. It may be in use or already deleted.');
       }
     });
   }
@@ -259,7 +262,10 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.toast.error('Failed to load products.');
+        this.toast.errorWithRetry(
+          'Failed to load products. Please check your connection.',
+          () => this.loadProductsPage(false)
+        );
       }
     });
   }
@@ -288,7 +294,7 @@ export class CompanyDashboardComponent implements OnInit {
         console.error(err);
         this.modalLoading = false;
         this.closeModal();
-        this.toast.error('Failed to load product details.');
+        this.toast.error('Could not load product details. Please try again.');
       }
     });
   }
@@ -330,7 +336,7 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Failed to create product.');
+        this.toast.error('Could not create product. Please check the form data and try again.');
       }
     });
   }
@@ -355,7 +361,7 @@ export class CompanyDashboardComponent implements OnInit {
         console.error(err);
         this.modalLoading = false;
         this.closeModal();
-        this.toast.error('Failed to load product.');
+        this.toast.error('Could not load product for editing. Please try again.');
       }
     });
   }
@@ -383,7 +389,7 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Failed to update product.');
+        this.toast.error('Could not update product. Please check the form data and try again.');
       }
     });
   }
@@ -413,7 +419,7 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.toast.error('Failed to delete product.');
+        this.toast.error('Could not delete product. It may be in use or already deleted.');
       }
     });
   }

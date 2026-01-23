@@ -307,8 +307,37 @@ select {
   background: rgba($error-500, 0.1);
   border: 1px solid rgba($error-500, 0.3);
   border-radius: $radius-md;
-  color: $error-400;
+  color: $error-500;
   font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+
+  .error-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+// Form validation
+.validation-error {
+  display: block;
+  margin-top: $space-1;
+  color: $error-500;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+label.has-error {
+  input, select, textarea {
+    border-color: $error-500;
+
+    &:focus {
+      border-color: $error-500;
+      box-shadow: 0 0 0 2px rgba($error-500, 0.2);
+    }
+  }
 }
 
 .muted {

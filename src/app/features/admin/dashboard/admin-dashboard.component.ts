@@ -66,7 +66,10 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to load companies.');
+        this.toast.errorWithRetry(
+          'Failed to load companies. Please check your connection.',
+          () => this.loadCompanies()
+        );
       }
     });
   }
@@ -99,7 +102,7 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to approve company.');
+        this.toast.error('Could not approve company. Please try again.');
       }
     });
   }
@@ -128,7 +131,10 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to load bond requests.');
+        this.toast.errorWithRetry(
+          'Failed to load bond requests. Please check your connection.',
+          () => this.loadBondRequests()
+        );
       }
     });
   }
@@ -155,7 +161,7 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to approve bond request.');
+        this.toast.error('Could not approve bond request. Please try again.');
       }
     });
   }

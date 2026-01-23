@@ -84,12 +84,21 @@
   transition: all $transition-base;
   min-width: 100px;
 
+  &:focus-visible {
+    outline: 2px solid $info-500;
+    outline-offset: 2px;
+  }
+
   &--secondary {
     background: $neutral-100;
     color: $neutral-700;
 
     &:hover {
       background: $neutral-200;
+    }
+
+    &:focus-visible {
+      outline-color: $neutral-500;
     }
   }
 
@@ -100,6 +109,10 @@
     &:hover {
       background: $error-600;
     }
+
+    &:focus-visible {
+      outline-color: $error-600;
+    }
   }
 
   &--warning {
@@ -109,6 +122,10 @@
     &:hover {
       background: $warning-600;
     }
+
+    &:focus-visible {
+      outline-color: $warning-600;
+    }
   }
 
   &--info {
@@ -117,6 +134,10 @@
 
     &:hover {
       background: $info-600;
+    }
+
+    &:focus-visible {
+      outline-color: $info-600;
     }
   }
 }

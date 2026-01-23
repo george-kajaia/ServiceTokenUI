@@ -56,14 +56,14 @@ export class CompanyLoginComponent {
           error: err => {
             this.loading = false;
             console.error(err);
-            this.toast.error('Login succeeded, but failed to load company data.');
+            this.toast.error('Login succeeded, but could not load company data. Please try logging in again.');
           }
         });
       },
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Login failed. Please check your credentials.');
+        this.toast.error('Login failed. Please check your username and password.');
       }
     });
   }
@@ -73,13 +73,13 @@ export class CompanyLoginComponent {
     this.companyApi.register(this.registerModel).subscribe({
       next: _ => {
         this.loading = false;
-        this.toast.success('Registration successful. Please login with your credentials.');
+        this.toast.success('Registration successful! You can now login with your credentials.');
         this.isRegisterMode = false;
       },
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Registration failed.');
+        this.toast.error('Registration failed. Username may already be taken.');
       }
     });
   }

@@ -116,7 +116,10 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.yourBondsLoading = false;
-          this.toast.error('Failed to load your bonds.');
+          this.toast.errorWithRetry(
+            'Failed to load your bonds. Please check your connection.',
+            () => this.loadYourBonds()
+          );
         }
       });
   }
@@ -138,7 +141,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.markingResellId = null;
-          this.toast.error('Failed to mark bond for resell.');
+          this.toast.error('Could not mark bond for resell. Please try again.');
         }
       });
   }
@@ -156,7 +159,10 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.companiesLoading = false;
-        this.toast.error('Failed to load companies.');
+        this.toast.errorWithRetry(
+          'Failed to load companies. Please check your connection.',
+          () => this.loadCompanies()
+        );
       }
     });
   }
@@ -186,7 +192,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.primaryBondsLoading = false;
-          this.toast.error('Failed to load primary market bonds.');
+          this.toast.error('Failed to load primary market bonds. Please try again.');
         }
       });
   }
@@ -218,7 +224,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.buyingPrimaryId = null;
-          this.toast.error('Failed to buy bond.');
+          this.toast.error('Could not complete purchase. The bond may no longer be available.');
         }
       });
   }
@@ -244,7 +250,10 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.secondaryBondsLoading = false;
-          this.toast.error('Failed to load secondary market bonds.');
+          this.toast.errorWithRetry(
+            'Failed to load secondary market bonds. Please check your connection.',
+            () => this.loadSecondaryBonds()
+          );
         }
       });
   }
@@ -274,7 +283,7 @@ export class InvestorMarketplaceComponent implements OnInit {
         error: err => {
           console.error(err);
           this.buyingSecondaryId = null;
-          this.toast.error('Failed to buy bond.');
+          this.toast.error('Could not complete purchase. The bond may no longer be available.');
         }
       });
   }
