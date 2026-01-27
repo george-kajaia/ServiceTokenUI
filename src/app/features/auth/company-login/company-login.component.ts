@@ -56,14 +56,18 @@ export class CompanyLoginComponent {
           error: err => {
             this.loading = false;
             console.error(err);
-            this.toast.error('Login succeeded, but could not load company data. Please try logging in again.');
+
+            const message = typeof err.error === 'string' ? err.error : err.error?.message;
+            this.toast.error(message);            
           }
         });
       },
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Login failed. Please check your username and password.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);        
       }
     });
   }
@@ -79,7 +83,9 @@ export class CompanyLoginComponent {
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Registration failed. Username may already be taken.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }

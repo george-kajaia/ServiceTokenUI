@@ -115,7 +115,9 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Could not approve company. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -177,7 +179,9 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to authorize request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -190,7 +194,9 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to deauthorize request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -203,7 +209,9 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to approve request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -226,7 +234,9 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: err => {
         console.error(err);
-        this.toast.error('Failed to delete request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }

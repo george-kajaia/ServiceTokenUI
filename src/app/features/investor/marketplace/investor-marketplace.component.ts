@@ -119,7 +119,9 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to mark token for resell. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -136,7 +138,10 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to cancel reselling. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -179,7 +184,10 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to buy token. It may no longer be available.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
+
       }
     });
   }
@@ -224,7 +232,10 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to buy token. It may no longer be available.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
+
       }
     });
   }

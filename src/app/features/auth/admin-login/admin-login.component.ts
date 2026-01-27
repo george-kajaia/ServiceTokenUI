@@ -40,7 +40,9 @@ export class AdminLoginComponent {
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Admin login failed. Please check your credentials.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);        
       }
     });
   }

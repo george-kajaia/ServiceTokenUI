@@ -53,7 +53,9 @@ export class InvestorLoginComponent {
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Login failed. Please check your username and password.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -70,7 +72,9 @@ export class InvestorLoginComponent {
       error: err => {
         this.loading = false;
         console.error(err);
-        this.toast.error('Registration failed. Username or public key may already be in use.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
