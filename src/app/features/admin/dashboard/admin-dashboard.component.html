@@ -1,5 +1,4 @@
-<div class="dashboard-container">
-  <h2>Admin Dashboard</h2>
+<div class="dashboard-container">filteredRequests  <h2>Admin Dashboard</h2>
 
   <div class="tabs">
     <button class="tab" [class.active]="activeTab === 'companies'" (click)="setTab('companies')">
@@ -48,8 +47,7 @@
       <thead>
         <tr>
           <th>Id</th>
-          <th>RowVersion</th>
-          <th>Name</th>
+          <th>Company</th>
           <th>Tax Code</th>
           <th>Status</th>
           <th>Reg Date</th>
@@ -59,7 +57,6 @@
       <tbody>
         <tr *ngFor="let c of filteredCompanies">
           <td>{{ c.id }}</td>
-          <td>{{ c.rowVersion }}</td>
           <td>{{ c.name }}</td>
           <td>{{ c.taxCode }}</td>
           <td>{{ c.status === 1 ? 'Active' : 'Not Active' }}</td>
@@ -107,10 +104,9 @@
       <thead>
         <tr>
           <th>Id</th>
-          <th>RowVersion</th>
           <th>Company</th>
-          <th>Prod</th>
-          <th>ServiceTokenCount</th>
+          <th>Product</th>
+          <th>Service Token Count</th>
           <th>Reg Date</th>
           <th>Status</th>
           <th>Authorize Date</th>
@@ -121,9 +117,8 @@
       <tbody>
         <tr *ngFor="let r of filteredRequests">
           <td>{{ r.id }}</td>
-          <td>{{ r.rowVersion }}</td>
-          <td>{{ r.companyId }}</td>
-          <td>{{ r.productId }}</td>
+          <td>{{ r.companyName }}</td>
+          <td>{{ r.productName }}</td>
           <td>{{ r.serviceTokenCount }}</td>
           <td>{{ r.regDate | date: 'medium' }}</td>
           <td>{{ requestStatusLabel(r.status) }}</td>
