@@ -14,8 +14,7 @@
   <!-- Companies tab -->
   <section *ngIf="activeTab === 'companies'" class="panel">
     <div class="panel-header">
-      <div class="panel-header-left">
-        <button class="secondary" (click)="loadCompanies()">Refresh</button>
+      <div class="panel-header-left">        
         <h3>Companies</h3>
       </div>
     </div>
@@ -40,7 +39,8 @@
         </select>
       </label>
 
-      <button class="secondary" (click)="clearCompanyFilter()">Clear</button>
+      <button class="secondary" (click)="clearCompanyFilter()">Clear filter</button>
+      <button class="secondary" (click)="loadCompanies()">Refresh</button>
     </div>
 
     <table *ngIf="!loading && filteredCompanies.length > 0" class="grid">
@@ -74,10 +74,7 @@
   <!-- Requests tab -->
   <section *ngIf="activeTab === 'requests'" class="panel">
     <div class="panel-header">
-      <div class="panel-header-left">
-        <button class="secondary" (click)="loadRequests()">Refresh</button>
-        <h3>Requests</h3>
-      </div>
+      <h3>Requests</h3>
     </div>
 
     <div class="filters">
@@ -97,7 +94,9 @@
         </select>
       </label>
 
-      <button class="secondary" (click)="clearRequestFilter()">Clear status</button>
+      <button class="secondary" (click)="clearRequestFilter()">Clear filter</button>
+
+      <button class="secondary" (click)="loadRequests()">Refresh</button>
     </div>
 
     <table *ngIf="!loading && filteredRequests.length > 0" class="grid">

@@ -87,11 +87,11 @@
       <h3>Products</h3>
 
       <div class="actions">
+        <button class="secondary" (click)="reloadProducts()" [disabled]="productsLoading">Refresh</button>
         <button (click)="onProductView()" [disabled]="!selectedProduct">View</button>
         <button (click)="onProductAdd()">Add</button>
         <button (click)="onProductEdit()" [disabled]="!selectedProduct">Edit</button>
         <button (click)="onProductDelete()" [disabled]="!selectedProduct">Delete</button>
-        <button class="secondary" (click)="reloadProducts()" [disabled]="productsLoading">Refresh</button>
       </div>
     </div>
 

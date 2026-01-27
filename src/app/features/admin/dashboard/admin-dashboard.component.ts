@@ -168,6 +168,7 @@ export class AdminDashboardComponent implements OnInit {
 
   clearRequestFilter() {
     this.requestFilter.status = '';
+    this.requestFilter.companyId = '';
     this.applyRequestFilter();
   }
 

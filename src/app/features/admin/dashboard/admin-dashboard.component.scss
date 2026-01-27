@@ -269,7 +269,8 @@ p {
 }
 
 // Align Refresh button to the left of the section title
-.panel-header-left {
+
+.panel-header-left{
   display: flex;
   align-items: center;
   gap: $space-2;
@@ -277,4 +278,4 @@ p {
   h3 {
     margin: 0;
   }
-}
+} 
