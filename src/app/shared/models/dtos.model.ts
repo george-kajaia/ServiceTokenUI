@@ -21,6 +21,6 @@ export interface InvestorCreateDto {
 // Matches ServiceTokenApi.Dto.RequestDto
 export interface RequestDto {
   companyId: number;
-  prodId: number;
+  productId: number;
   serviceTokenCount: number;
 }

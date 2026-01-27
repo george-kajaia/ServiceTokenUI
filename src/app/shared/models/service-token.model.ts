@@ -16,7 +16,7 @@ export interface ServiceToken {
   rowVersion: number;
   companyId: number;
   requestId: number;
-  prodId: number;
+  productId: number;
   startDate: string;
   endDate?: string | null;
   status: ServiceTokenStatus | number;

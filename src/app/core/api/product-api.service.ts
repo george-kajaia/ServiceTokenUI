@@ -22,8 +22,8 @@ export class ProductApiService {
     return this.http.get<Product[]>(`${this.baseUrl}/GetAll`, { params });
   }
 
-  getById(prodId: number): Observable<Product> {
-    return this.http.get<Product>(`${this.baseUrl}/GetById/${prodId}`);
+  getById(productId: number): Observable<Product> {
+    return this.http.get<Product>(`${this.baseUrl}/GetById/${productId}`);
   }
 
   create(product: Product): Observable<void> {
@@ -31,14 +31,14 @@ export class ProductApiService {
     return this.http.post<void>(`${this.baseUrl}/Create`, product);
   }
 
-  update(prodId: number, newProduct: Product): Observable<void> {
-    // Backend signature: Update(int prodId, [FromBody] Product newProduct) (prodId bound from query string)
+  update(productId: number, newProduct: Product): Observable<void> {
+    // Backend signature: Update(int productId, [FromBody] Product newProduct) (productId bound from query string)
     // Backend returns 200 OK with an empty body
-    return this.http.put<void>(`${this.baseUrl}/Update?prodId=${prodId}`, newProduct);
+    return this.http.put<void>(`${this.baseUrl}/Update?productId=${productId}`, newProduct);
   }
 
-  delete(prodId: number): Observable<void> {
-    // Backend signature: Delete(int prodId) (prodId bound from query string)
-    return this.http.delete<void>(`${this.baseUrl}/Delete?prodId=${prodId}`);
+  delete(productId: number): Observable<void> {
+    // Backend signature: Delete(int productId) (productId bound from query string)
+    return this.http.delete<void>(`${this.baseUrl}/Delete?productId=${productId}`);
   }
 }

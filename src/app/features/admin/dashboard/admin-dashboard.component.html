@@ -15,9 +15,9 @@
   <!-- Companies tab -->
   <section *ngIf="activeTab === 'companies'" class="panel">
     <div class="panel-header">
-      <h3>Companies</h3>
-      <div class="actions">
+      <div class="panel-header-left">
         <button class="secondary" (click)="loadCompanies()">Refresh</button>
+        <h3>Companies</h3>
       </div>
     </div>
 
@@ -77,9 +77,9 @@
   <!-- Requests tab -->
   <section *ngIf="activeTab === 'requests'" class="panel">
     <div class="panel-header">
-      <h3>Requests</h3>
-      <div class="actions">
+      <div class="panel-header-left">
         <button class="secondary" (click)="loadRequests()">Refresh</button>
+        <h3>Requests</h3>
       </div>
     </div>
 
@@ -123,7 +123,7 @@
           <td>{{ r.id }}</td>
           <td>{{ r.rowVersion }}</td>
           <td>{{ r.companyId }}</td>
-          <td>{{ r.prodId }}</td>
+          <td>{{ r.productId }}</td>
           <td>{{ r.serviceTokenCount }}</td>
           <td>{{ r.regDate | date: 'medium' }}</td>
           <td>{{ requestStatusLabel(r.status) }}</td>

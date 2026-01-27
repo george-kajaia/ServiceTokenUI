@@ -140,7 +140,6 @@ export class InvestorMarketplaceComponent implements OnInit {
         this.loading = false;
 
         const message = typeof err.error === 'string' ? err.error : err.error?.message;
-        const message = typeof err.error === 'string' ? err.error : err.error?.message;
         this.toast.error(message);
       }
     });
