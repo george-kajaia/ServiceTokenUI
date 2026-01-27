@@ -467,7 +467,9 @@ export class CompanyDashboardComponent implements OnInit {
         console.error(err);
         this.modalLoading = false;
         this.closeModal();
-        this.toast.error('Could not load product for editing. Please try again.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -495,7 +497,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not update product. Please check the form data and try again.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -525,7 +529,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.toast.error('Could not delete product. It may be in use or already deleted.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
