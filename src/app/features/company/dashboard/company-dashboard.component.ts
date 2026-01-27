@@ -174,7 +174,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not create request. Please verify the product ID and try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -222,9 +224,10 @@ export class CompanyDashboardComponent implements OnInit {
         this.toast.success('Request updated successfully.');
       },
       error: err => {
-        console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not update request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -250,9 +253,10 @@ export class CompanyDashboardComponent implements OnInit {
         this.toast.success('Request deleted successfully.');
       },
       error: err => {
-        console.error(err);
         this.requestsLoading = false;
-        this.toast.error('Could not delete request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -273,7 +277,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.toast.error('Failed to authorize request. Please try again.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -293,7 +299,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.toast.error('Failed to deauthorize request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -388,7 +396,9 @@ export class CompanyDashboardComponent implements OnInit {
         console.error(err);
         this.modalLoading = false;
         this.closeModal();
-        this.toast.error('Could not load product details. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -430,7 +440,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not create product. Please check the form data and try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
