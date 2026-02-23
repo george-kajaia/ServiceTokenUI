@@ -177,6 +177,15 @@ $market-border-default: #bae6fd;
   }
 }
 
+// Click-to-select rows (actions are in the top toolbar)
+.selectable-row {
+  cursor: pointer;
+}
+
+.selectable-row.selected {
+  background: rgba($market-secondary, 0.16) !important;
+}
+
 // ============================================
 // Action Buttons
 // ============================================
@@ -243,4 +252,107 @@ $market-border-default: #bae6fd;
   word-break: break-all;
   max-width: 120px;
   @include truncate;
+}
+
+// ============================================
+// Filters + Panels (matches current template)
+// ============================================
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: $space-3;
+  margin-bottom: $space-5;
+  padding: $space-4;
+  background: $market-bg-surface;
+  border: 1px solid $market-border-subtle;
+  border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    font-size: $font-size-sm;
+    color: $market-text-muted;
+    min-width: 220px;
+  }
+
+  select,
+  input {
+    padding: $space-2 $space-3;
+    background: $market-bg-surface;
+    border: 1px solid $market-border-default;
+    border-radius: $radius-md;
+    color: $market-text-primary;
+    font-size: $font-size-sm;
+    transition: all $transition-base;
+
+    &:focus {
+      outline: none;
+      border-color: $market-primary;
+      box-shadow: 0 0 0 3px rgba($market-primary, 0.1);
+    }
+  }
+}
+
+.panel {
+  padding: $space-5;
+  background: $market-bg-surface;
+  border: 1px solid $market-border-subtle;
+  border-radius: $radius-lg;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  margin-bottom: $space-4;
+
+  h3 {
+    margin: 0;
+    font-weight: $font-weight-semibold;
+    color: $market-text-secondary;
+  }
+}
+
+.muted {
+  margin-top: $space-3;
+  color: $market-text-muted;
+  font-size: $font-size-sm;
+}
+
+button.secondary {
+  padding: $space-2 $space-4;
+  border: none;
+  border-radius: $radius-full;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: #ffffff;
+  background: linear-gradient(135deg, $market-secondary, $market-primary);
+  transition: all $transition-base;
+  @include hover-lift;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba($market-secondary, 0.25);
+  }
+
+  // Make enabled/disabled states visually obvious (requested)
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 1; // rely on color change instead of fading
+    color: $market-text-muted;
+    background: linear-gradient(135deg, #cbd5e1, #e2e8f0);
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.action-col {
+  display: flex;
+  gap: $space-2;
+  flex-wrap: wrap;
 }
