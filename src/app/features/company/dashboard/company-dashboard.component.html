@@ -45,8 +45,7 @@
       <thead>
         <tr>
           <th>Id</th>
-          <th>Prod Id</th>
-          <th>ServiceTokenCount</th>
+          <th>Service Token Count</th>
           <th>Reg Date</th>
           <th>Status</th>
           <th>Authorize Date</th>
@@ -60,7 +59,6 @@
           (click)="selectRequest(r)"
           [class.selected]="selectedRequest?.id === r.id">
           <td>{{ r.id }}</td>
-          <td>{{ r.prodId }}</td>
           <td>{{ r.serviceTokenCount }}</td>
           <td>{{ r.regDate | date: 'medium' }}</td>
           <td>{{ requestStatusLabel(r.status) }}</td>
@@ -89,11 +87,11 @@
       <h3>Products</h3>
 
       <div class="actions">
+        <button class="secondary" (click)="reloadProducts()" [disabled]="productsLoading">Refresh</button>
         <button (click)="onProductView()" [disabled]="!selectedProduct">View</button>
         <button (click)="onProductAdd()">Add</button>
         <button (click)="onProductEdit()" [disabled]="!selectedProduct">Edit</button>
         <button (click)="onProductDelete()" [disabled]="!selectedProduct">Delete</button>
-        <button class="secondary" (click)="reloadProducts()" [disabled]="productsLoading">Refresh</button>
       </div>
     </div>
 
@@ -113,7 +111,7 @@
       <thead>
         <tr>
           <th>Id</th>
-          <th>Name</th>
+          <th>Product</th>
           <th>Service Count</th>
           <th>Price</th>
           <th>Term</th>
@@ -164,10 +162,9 @@
         <ng-container *ngIf="modalMode === 'requestView' && modalRequest">
           <dl class="details">
             <div><dt>Id</dt><dd>{{ modalRequest.id }}</dd></div>
-            <div><dt>Row Version</dt><dd>{{ modalRequest.rowVersion }}</dd></div>
-            <div><dt>Company Id</dt><dd>{{ modalRequest.companyId }}</dd></div>
-            <div><dt>Prod Id</dt><dd>{{ modalRequest.prodId }}</dd></div>
-            <div><dt>ServiceTokenCount</dt><dd>{{ modalRequest.serviceTokenCount }}</dd></div>
+            <div><dt>Company</dt><dd>{{ modalRequest.companyName }}</dd></div>
+            <div><dt>Product</dt><dd>{{ modalRequest.productName }}</dd></div>
+            <div><dt>Service Token Count</dt><dd>{{ modalRequest.serviceTokenCount }}</dd></div>
             <div><dt>Reg Date</dt><dd>{{ modalRequest.regDate | date: 'medium' }}</dd></div>
             <div><dt>Status</dt><dd>{{ requestStatusLabel(modalRequest.status) }}</dd></div>
             <div><dt>Authorize Date</dt><dd>{{ modalRequest.authorizeDate ? (modalRequest.authorizeDate | date: 'medium') : '-' }}</dd></div>
@@ -180,7 +177,7 @@
           <form (ngSubmit)="modalMode === 'requestAdd' ? submitRequestAdd() : submitRequestEdit()" class="form">
             <label>
               Select Product (recommended)
-              <select [(ngModel)]="requestForm.prodId" name="prodId">
+              <select [(ngModel)]="requestForm.productId" name="productId">
                 <option [ngValue]="0">-- Select --</option>
                 <option *ngFor="let p of products" [ngValue]="p.id">
                   {{ p.name }} (Id: {{ p.id }})
@@ -190,7 +187,7 @@
 
             <label>
               Or enter Product Id manually
-              <input type="number" [(ngModel)]="requestFormProdIdManual" name="prodIdManual" min="1" />
+              <input type="number" [(ngModel)]="requestFormProductIdManual" name="productIdManual" min="1" />
             </label>
 
             <label>
@@ -211,8 +208,7 @@
         <ng-container *ngIf="modalMode === 'productView' && modalProduct">
           <dl class="details">
             <div><dt>Id</dt><dd>{{ modalProduct.id }}</dd></div>
-            <div><dt>Company Id</dt><dd>{{ modalProduct.companyId }}</dd></div>
-            <div><dt>Name</dt><dd>{{ modalProduct.name }}</dd></div>
+            <div><dt>Product</dt><dd>{{ modalProduct.name }}</dd></div>
             <div><dt>Service Count</dt><dd>{{ modalProduct.serviceCount }}</dd></div>
             <div><dt>Price</dt><dd>{{ modalProduct.price }}</dd></div>
             <div><dt>Term</dt><dd>{{ modalProduct.term ?? '-' }}</dd></div>

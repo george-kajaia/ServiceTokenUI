@@ -62,8 +62,8 @@ export class CompanyDashboardComponent implements OnInit {
   modalProduct: Product | null = null;
 
   // Forms
-  requestForm: RequestDto = { companyId: 0, prodId: 0, serviceTokenCount: 1 };
-  requestFormProdIdManual: number | null = null;
+  requestForm: RequestDto = { companyId: 0, productId: 0, serviceTokenCount: 1 };
+  requestFormProductIdManual: number | null = null;
 
   productForm: Product = {
     id: 0,
@@ -143,23 +143,23 @@ export class CompanyDashboardComponent implements OnInit {
   onRequestAdd() {
     if (!this.company) return;
 
-    this.requestForm = { companyId: this.company.id, prodId: 0, serviceTokenCount: 1 };
-    this.requestFormProdIdManual = null;
+    this.requestForm = { companyId: this.company.id, productId: 0, serviceTokenCount: 1 };
+    this.requestFormProductIdManual = null;
     this.openModal('requestAdd', 'Add new request');
   }
 
   submitRequestAdd() {
     if (!this.company) return;
 
-    const prodId =
-      (this.requestFormProdIdManual ?? 0) > 0 ? (this.requestFormProdIdManual as number) : this.requestForm.prodId;
+    const productId =
+      (this.requestFormProductIdManual ?? 0) > 0 ? (this.requestFormProductIdManual as number) : this.requestForm.productId;
 
-    if (!prodId || prodId <= 0) {
+    if (!productId || productId <= 0) {
       this.modalError = 'Please select or enter a valid Product Id.';
       return;
     }
 
-    const dto: RequestDto = { companyId: this.company.id, prodId, serviceTokenCount: this.requestForm.serviceTokenCount };
+    const dto: RequestDto = { companyId: this.company.id, productId, serviceTokenCount: this.requestForm.serviceTokenCount };
 
     this.modalLoading = true;
     this.modalError = '';
@@ -174,7 +174,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not create request. Please verify the product ID and try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -184,18 +186,18 @@ export class CompanyDashboardComponent implements OnInit {
 
     this.requestForm = {
       companyId: this.company.id,
-      prodId: this.selectedRequest.prodId,
+      productId: this.selectedRequest.productId,
       serviceTokenCount: this.selectedRequest.serviceTokenCount
     };
-    this.requestFormProdIdManual = null;
+    this.requestFormProductIdManual = null;
     this.openModal('requestEdit', 'Edit request');
   }
 
   submitRequestEdit() {
     if (!this.company || !this.selectedRequest) return;
 
-    const prodId = this.requestForm.prodId;
-    if (!prodId || prodId <= 0) {
+    const productId = this.requestForm.productId;
+    if (!productId || productId <= 0) {
       this.modalError = 'Please select a valid Product Id.';
       return;
     }
@@ -207,7 +209,7 @@ export class CompanyDashboardComponent implements OnInit {
 
     const dto: RequestDto = {
       companyId: this.company.id,
-      prodId,
+      productId,
       serviceTokenCount: this.requestForm.serviceTokenCount
     };
 
@@ -222,9 +224,10 @@ export class CompanyDashboardComponent implements OnInit {
         this.toast.success('Request updated successfully.');
       },
       error: err => {
-        console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not update request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -250,9 +253,10 @@ export class CompanyDashboardComponent implements OnInit {
         this.toast.success('Request deleted successfully.');
       },
       error: err => {
-        console.error(err);
         this.requestsLoading = false;
-        this.toast.error('Could not delete request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -273,7 +277,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.toast.error('Failed to authorize request. Please try again.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -293,7 +299,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.requestsLoading = false;
-        this.toast.error('Failed to deauthorize request. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -388,7 +396,9 @@ export class CompanyDashboardComponent implements OnInit {
         console.error(err);
         this.modalLoading = false;
         this.closeModal();
-        this.toast.error('Could not load product details. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -430,7 +440,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not create product. Please check the form data and try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -440,11 +452,11 @@ export class CompanyDashboardComponent implements OnInit {
     this.openProductEdit(this.selectedProduct.id);
   }
 
-  private openProductEdit(prodId: number) {
+  private openProductEdit(productId: number) {
     this.openModal('productEdit', 'Edit product');
     this.modalLoading = true;
 
-    this.productApi.getById(prodId).subscribe({
+    this.productApi.getById(productId).subscribe({
       next: prod => {
         const term = prod.term === undefined ? null : prod.term;
         const scheduleType = prod.scheduleType ?? { periodType: SchedulePeriodType.None, periodNumber: null };
@@ -455,7 +467,9 @@ export class CompanyDashboardComponent implements OnInit {
         console.error(err);
         this.modalLoading = false;
         this.closeModal();
-        this.toast.error('Could not load product for editing. Please try again.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -466,24 +480,26 @@ export class CompanyDashboardComponent implements OnInit {
     this.modalLoading = true;
     this.modalError = '';
 
-    const prodId = this.productForm.id;
+    const productId = this.productForm.id;
 
     // Ensure companyId is preserved
     const payload: Product = { ...this.productForm, companyId: this.company.id };
 
-    this.productApi.update(prodId, payload).subscribe({
+    this.productApi.update(productId, payload).subscribe({
       next: _ => {
         this.modalLoading = false;
         this.closeModal();
         this.reloadProducts(true);
-        // If edit was invoked from Requests tab, refresh Requests as well (prodId referenced there)
+        // If edit was invoked from Requests tab, refresh Requests as well (productId referenced there)
         this.loadRequests(true);
         this.toast.success('Product updated successfully.');
       },
       error: err => {
         console.error(err);
         this.modalLoading = false;
-        this.toast.error('Could not update product. Please check the form data and try again.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -491,10 +507,10 @@ export class CompanyDashboardComponent implements OnInit {
   async onProductDelete() {
     if (!this.selectedProduct) return;
 
-    const prodId = this.selectedProduct.id;
+    const productId = this.selectedProduct.id;
     const confirmed = await this.dialog.confirm({
       title: 'Delete Product',
-      message: `Are you sure you want to delete product #${prodId}? This action cannot be undone.`,
+      message: `Are you sure you want to delete product #${productId}? This action cannot be undone.`,
       confirmText: 'Delete',
       type: 'danger'
     });
@@ -502,7 +518,7 @@ export class CompanyDashboardComponent implements OnInit {
 
     this.productsLoading = true;
 
-    this.productApi.delete(prodId).subscribe({
+    this.productApi.delete(productId).subscribe({
       next: _ => {
         this.productsLoading = false;
         this.selectedProduct = null;
@@ -513,7 +529,9 @@ export class CompanyDashboardComponent implements OnInit {
       error: err => {
         console.error(err);
         this.productsLoading = false;
-        this.toast.error('Could not delete product. It may be in use or already deleted.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }

@@ -9,7 +9,9 @@ export interface Request {
   id: number;
   rowVersion: number;
   companyId: number;
-  prodId: number;
+  companyName: string | null; 
+  productId: number;
+  productName: string | null;
   serviceTokenCount: number;
   regDate: string;
   status: RequestStatus | number;

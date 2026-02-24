@@ -34,10 +34,16 @@ export class InvestorMarketplaceComponent implements OnInit {
 
   // Data
   yourTokens: ServiceTokenDto[] = [];
+  filteredYourTokens: ServiceTokenDto[] = [];
   primaryMarketTokens: ServiceTokenDto[] = [];
   secondaryMarketTokens: ServiceTokenDto[] = [];
 
   loading = false;
+
+  // Selected rows (actions moved to top toolbar)
+  selectedYourToken: ServiceTokenDto | null = null;
+  selectedPrimaryToken: ServiceTokenDto | null = null;
+  selectedSecondaryToken: ServiceTokenDto | null = null;
 
   private toast = inject(ToastService);
 
@@ -63,6 +69,9 @@ export class InvestorMarketplaceComponent implements OnInit {
 
   setTab(tab: MarketplaceTab) {
     this.activeTab = tab;
+
+    // Clear selection when switching tabs
+    this.clearSelection();
 
     if (tab === 'yourTokens') {
       this.loadYourTokens();
@@ -92,6 +101,8 @@ export class InvestorMarketplaceComponent implements OnInit {
     this.serviceTokenApi.getInvestorServiceTokens(this.investorPublicKey).subscribe({
       next: list => {
         this.yourTokens = list ?? [];
+        this.applyLocalYourTokensFilters();
+        this.reconcileSelection();
         this.loading = false;
       },
       error: err => {
@@ -107,6 +118,149 @@ export class InvestorMarketplaceComponent implements OnInit {
     });
   }
 
+  // -----------------------------
+  // Filters (shared UI)
+  // -----------------------------
+  applyFilters() {
+    if (this.activeTab === 'yourTokens') {
+      // Client-side filtering (API currently returns all investor tokens)
+      this.applyLocalYourTokensFilters();
+      return;
+    }
+
+    if (this.activeTab === 'primaryMarket') {
+      this.loadPrimaryMarket();
+      return;
+    }
+
+    this.loadSecondaryMarket();
+  }
+
+  refreshFilters() {
+    this.marketCompanyId = -1;
+    this.marketRequestId = -1;
+    this.refreshCurrentTab();
+  }
+
+  refreshCurrentTab() {
+    if (this.activeTab === 'yourTokens') {
+      this.loadYourTokens();
+      return;
+    }
+
+    if (this.activeTab === 'primaryMarket') {
+      this.loadPrimaryMarket();
+      return;
+    }
+
+    this.loadSecondaryMarket();
+  }
+
+  private applyLocalYourTokensFilters() {
+    const companyId = Number(this.marketCompanyId);
+    const requestId = Number(this.marketRequestId);
+
+    let result = [...(this.yourTokens ?? [])];
+
+    if (!Number.isNaN(companyId) && companyId !== -1) {
+      result = result.filter(t => Number((t as any).companyId) === companyId);
+    }
+
+    if (!Number.isNaN(requestId) && requestId !== -1) {
+      result = result.filter(t => Number((t as any).requestId) === requestId);
+    }
+
+    this.filteredYourTokens = result;
+  }
+
+  // -----------------------------
+  // Selection + toolbar actions
+  // -----------------------------
+  clearSelection() {
+    this.selectedYourToken = null;
+    this.selectedPrimaryToken = null;
+    this.selectedSecondaryToken = null;
+  }
+
+  private reconcileSelection() {
+    // When lists refresh, clear selection if the selected token is no longer present.
+    if (this.selectedYourToken) {
+      const exists = (this.filteredYourTokens ?? []).some(t => t.id === this.selectedYourToken?.id);
+      if (!exists) this.selectedYourToken = null;
+    }
+
+    if (this.selectedPrimaryToken) {
+      const exists = (this.primaryMarketTokens ?? []).some(t => t.id === this.selectedPrimaryToken?.id);
+      if (!exists) this.selectedPrimaryToken = null;
+    }
+
+    if (this.selectedSecondaryToken) {
+      const exists = (this.secondaryMarketTokens ?? []).some(t => t.id === this.selectedSecondaryToken?.id);
+      if (!exists) this.selectedSecondaryToken = null;
+    }
+  }
+
+  selectYourToken(t: ServiceTokenDto) {
+    this.selectedYourToken = t;
+  }
+
+  selectPrimaryToken(t: ServiceTokenDto) {
+    this.selectedPrimaryToken = t;
+  }
+
+  selectSecondaryToken(t: ServiceTokenDto) {
+    this.selectedSecondaryToken = t;
+  }
+
+  isSelectedYour(t: ServiceTokenDto): boolean {
+    return !!this.selectedYourToken && this.selectedYourToken.id === t.id;
+  }
+
+  isSelectedPrimary(t: ServiceTokenDto): boolean {
+    return !!this.selectedPrimaryToken && this.selectedPrimaryToken.id === t.id;
+  }
+
+  isSelectedSecondary(t: ServiceTokenDto): boolean {
+    return !!this.selectedSecondaryToken && this.selectedSecondaryToken.id === t.id;
+  }
+
+  
+  get canMarkForResell(): boolean {
+    return !!this.selectedYourToken && Number((this.selectedYourToken as any).status) === 1 && !this.loading;
+  }
+
+  get canCancelReselling(): boolean {
+    return !!this.selectedYourToken && Number((this.selectedYourToken as any).status) === 0 && !this.loading;
+  }
+
+  get canBuyPrimary(): boolean {
+    return !!this.selectedPrimaryToken && !this.loading;
+  }
+
+  get canBuySecondary(): boolean {
+    return !!this.selectedSecondaryToken && !this.loading;
+  }
+
+markSelectedForResell() {
+    if (!this.selectedYourToken) return;
+    this.markForResell(this.selectedYourToken);
+  }
+
+  cancelSelectedReselling() {
+    if (!this.selectedYourToken) return;
+    this.cancelReselling(this.selectedYourToken);
+  }
+
+  buySelectedPrimary() {
+    if (!this.selectedPrimaryToken) return;
+    this.buyPrimary(this.selectedPrimaryToken);
+  }
+
+  buySelectedSecondary() {
+    if (!this.selectedSecondaryToken) return;
+    this.buySecondary(this.selectedSecondaryToken);
+  }
+
   markForResell(t: ServiceTokenDto) {
     this.loading = true;
 
@@ -119,7 +273,9 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to mark token for resell. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -136,7 +292,9 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to cancel reselling. Please try again.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
       }
     });
   }
@@ -150,6 +308,7 @@ export class InvestorMarketplaceComponent implements OnInit {
     this.serviceTokenApi.getPrimaryMarketServiceTokens(this.marketCompanyId, this.marketRequestId).subscribe({
       next: list => {
         this.primaryMarketTokens = list ?? [];
+        this.reconcileSelection();
         this.loading = false;
       },
       error: err => {
@@ -179,7 +338,10 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to buy token. It may no longer be available.');
+
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
+
       }
     });
   }
@@ -195,6 +357,7 @@ export class InvestorMarketplaceComponent implements OnInit {
       .subscribe({
         next: list => {
           this.secondaryMarketTokens = list ?? [];
+          this.reconcileSelection();
           this.loading = false;
         },
         error: err => {
@@ -224,7 +387,10 @@ export class InvestorMarketplaceComponent implements OnInit {
       error: err => {
         console.error(err);
         this.loading = false;
-        this.toast.error('Failed to buy token. It may no longer be available.');
+        
+        const message = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.toast.error(message);
+
       }
     });
   }

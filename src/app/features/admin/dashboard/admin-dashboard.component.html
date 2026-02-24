@@ -1,5 +1,4 @@
-<div class="dashboard-container">
-  <h2>Admin Dashboard</h2>
+<div class="dashboard-container">filteredRequests  <h2>Admin Dashboard</h2>
 
   <div class="tabs">
     <button class="tab" [class.active]="activeTab === 'companies'" (click)="setTab('companies')">
@@ -15,9 +14,8 @@
   <!-- Companies tab -->
   <section *ngIf="activeTab === 'companies'" class="panel">
     <div class="panel-header">
-      <h3>Companies</h3>
-      <div class="actions">
-        <button class="secondary" (click)="loadCompanies()">Refresh</button>
+      <div class="panel-header-left">        
+        <h3>Companies</h3>
       </div>
     </div>
 
@@ -41,15 +39,15 @@
         </select>
       </label>
 
-      <button class="secondary" (click)="clearCompanyFilter()">Clear</button>
+      <button class="secondary" (click)="clearCompanyFilter()">Clear filter</button>
+      <button class="secondary" (click)="loadCompanies()">Refresh</button>
     </div>
 
     <table *ngIf="!loading && filteredCompanies.length > 0" class="grid">
       <thead>
         <tr>
           <th>Id</th>
-          <th>RowVersion</th>
-          <th>Name</th>
+          <th>Company</th>
           <th>Tax Code</th>
           <th>Status</th>
           <th>Reg Date</th>
@@ -59,7 +57,6 @@
       <tbody>
         <tr *ngFor="let c of filteredCompanies">
           <td>{{ c.id }}</td>
-          <td>{{ c.rowVersion }}</td>
           <td>{{ c.name }}</td>
           <td>{{ c.taxCode }}</td>
           <td>{{ c.status === 1 ? 'Active' : 'Not Active' }}</td>
@@ -78,9 +75,6 @@
   <section *ngIf="activeTab === 'requests'" class="panel">
     <div class="panel-header">
       <h3>Requests</h3>
-      <div class="actions">
-        <button class="secondary" (click)="loadRequests()">Refresh</button>
-      </div>
     </div>
 
     <div class="filters">
@@ -100,17 +94,18 @@
         </select>
       </label>
 
-      <button class="secondary" (click)="clearRequestFilter()">Clear status</button>
+      <button class="secondary" (click)="clearRequestFilter()">Clear filter</button>
+
+      <button class="secondary" (click)="loadRequests()">Refresh</button>
     </div>
 
     <table *ngIf="!loading && filteredRequests.length > 0" class="grid">
       <thead>
         <tr>
           <th>Id</th>
-          <th>RowVersion</th>
           <th>Company</th>
-          <th>Prod</th>
-          <th>ServiceTokenCount</th>
+          <th>Product</th>
+          <th>Service Token Count</th>
           <th>Reg Date</th>
           <th>Status</th>
           <th>Authorize Date</th>
@@ -121,9 +116,8 @@
       <tbody>
         <tr *ngFor="let r of filteredRequests">
           <td>{{ r.id }}</td>
-          <td>{{ r.rowVersion }}</td>
-          <td>{{ r.companyId }}</td>
-          <td>{{ r.prodId }}</td>
+          <td>{{ r.companyName }}</td>
+          <td>{{ r.productName }}</td>
           <td>{{ r.serviceTokenCount }}</td>
           <td>{{ r.regDate | date: 'medium' }}</td>
           <td>{{ requestStatusLabel(r.status) }}</td>

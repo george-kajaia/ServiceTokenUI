@@ -6,7 +6,7 @@ import { ServiceTokenDto } from '../../shared/models/service-token.model';
 
 @Injectable({ providedIn: 'root' })
 export class ServiceTokenApiService {
-  private baseUrl = `${environment.serviceTokenApiBaseUrl}/ServiceToken`;
+  private baseUrl = `${environment.apiBaseUrl}/ServiceToken`;
 
   constructor(private http: HttpClient) {}
 
